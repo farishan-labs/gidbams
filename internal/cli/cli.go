@@ -66,6 +66,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(diffCmd)
+	rootCmd.AddCommand(checkCmd)
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -566,4 +567,10 @@ var diffCmd = &cobra.Command{
 		}
 		return nil
 	},
+}
+
+var checkCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Alias for doctor",
+	RunE:  doctorCmd.RunE,
 }
