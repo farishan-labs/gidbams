@@ -61,6 +61,7 @@ func init() {
 	doctorCmd.Flags().BoolVar(&doctorJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(queryCmd)
 	rootCmd.AddCommand(statsCmd)
+	statsCmd.Flags().BoolVar(&statsJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(rebuildCmd)
 	rootCmd.AddCommand(serveCmd)
@@ -449,6 +450,8 @@ var queryCmd = &cobra.Command{
 	},
 }
 
+var statsJSON bool
+
 var statsCmd = &cobra.Command{
 	Use:   "stats",
 	Short: "Print collection record counts",
@@ -457,6 +460,7 @@ var statsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		stats := map[string]int{}
 		for _, ref := range root.Collections {
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
@@ -467,7 +471,14 @@ var statsCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			fmt.Printf("%s: %d records\n", ref.Name, len(recs))
+			stats[ref.Name] = len(recs)
+			if !statsJSON {
+				fmt.Printf("%s: %d records\n", ref.Name, len(recs))
+			}
+		}
+		if statsJSON {
+			b, _ := json.MarshalIndent(stats, "", "  ")
+			fmt.Println(string(b))
 		}
 		return nil
 	},
