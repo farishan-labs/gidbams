@@ -27,6 +27,7 @@ import (
 )
 
 var repoRoot string
+var initExample bool
 
 func Execute() error {
 	return rootCmd.Execute()
@@ -49,6 +50,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&repoRoot, "repo", "r", "", "repository root (default: cwd)")
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().BoolVar(&initExample, "example", false, "scaffold an example collection")
 	rootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVar(&validateFrom, "from", "", "validate files changed since this commit")
 	validateCmd.Flags().StringVar(&validateTo, "to", "", "validate files changed up to this commit")
@@ -101,6 +103,15 @@ var initCmd = &cobra.Command{
 			return err
 		}
 		_ = os.MkdirAll(filepath.Join(repoRoot, config.DefaultDataDir), 0o755)
+		if initExample {
+			exDir := filepath.Join(repoRoot, config.DefaultDataDir, "items")
+			_ = os.MkdirAll(exDir, 0o755)
+			_ = os.WriteFile(filepath.Join(exDir, "schema.yaml"), []byte("name: items\nrecord_file:\n  format: md\n  name: \"{id}.md\"\ncolumns:\n  - name: id\n    type: string\n    required: true\n    unique: true\n  - name: name\n    type: string\n    required: true\n"), 0o644)
+			_ = os.WriteFile(filepath.Join(exDir, "hello.md"), []byte("---\nid: hello\nname: Hello\n---\nBody\n"), 0o644)
+			// register collection
+			c.Collections = append(c.Collections, config.CollectionRef{Name: "items", Path: "items"})
+			_ = config.SaveRoot(repoRoot, c)
+		}
 		fmt.Println("initialized git-dbms repo at", repoRoot)
 		return nil
 	},
