@@ -59,6 +59,7 @@ func init() {
 	rootCmd.AddCommand(queryCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(exportCmd)
+	rootCmd.AddCommand(rebuildCmd)
 }
 
 var versionCmd = &cobra.Command{
@@ -487,5 +488,21 @@ var exportCmd = &cobra.Command{
 		b, _ := json.MarshalIndent(out, "", "  ")
 		fmt.Println(string(b))
 		return nil
+	},
+}
+
+var rebuildCmd = &cobra.Command{
+	Use:   "rebuild",
+	Short: "Validate then build derived SQLite database",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// validate
+		if err := validateCmd.RunE(cmd, nil); err != nil {
+			return err
+		}
+		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
+		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+			dbPath = v
+		}
+		return buildDerivedDB(repoRoot, dbPath)
 	},
 }
