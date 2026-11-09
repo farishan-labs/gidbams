@@ -4,14 +4,17 @@ package cli
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -628,10 +631,17 @@ var serveCmd = &cobra.Command{
 		srv := httpserver.New(repoRoot, serveToken)
 		addr := fmt.Sprintf(":%d", servePort)
 		fmt.Printf("git-dbms serve listening on %s\n", addr)
+		httpSrv := &http.Server{Addr: addr, Handler: srv.Handler()}
+		go func() {
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+			<-sigCh
+			_ = httpSrv.Shutdown(context.Background())
+		}()
 		if serveCert != "" && serveKey != "" {
-			return http.ListenAndServeTLS(addr, serveCert, serveKey, srv.Handler())
+			return httpSrv.ListenAndServeTLS(serveCert, serveKey)
 		}
-		return http.ListenAndServe(addr, srv.Handler())
+		return httpSrv.ListenAndServe()
 	},
 }
 
