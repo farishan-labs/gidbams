@@ -14,9 +14,9 @@ import (
 
 // Store is a collection store rooted at a directory.
 type Store struct {
-	Def       *config.CollectionDefinition
-	RepoRoot  string
-	Dir       string // absolute path to collection data dir
+	Def      *config.CollectionDefinition
+	RepoRoot string
+	Dir      string // absolute path to collection data dir
 }
 
 func New(repoRoot string, def *config.CollectionDefinition) *Store {
@@ -178,7 +178,6 @@ func (s *Store) Delete(id string) error {
 	return os.Remove(r.Path)
 }
 
-
 func validateID(id string) error {
 	if id == "" {
 		return fmt.Errorf("id required")
@@ -205,4 +204,3 @@ func isWithin(root, path string) bool {
 	}
 	return true
 }
-

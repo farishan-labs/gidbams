@@ -63,4 +63,3 @@ func Query(dbPath, q string) (string, error) {
 	}
 	return string(b), nil
 }
-

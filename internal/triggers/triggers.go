@@ -11,9 +11,9 @@ import (
 )
 
 type Trigger struct {
-	Name  string   `yaml:"name"`
-	On    []string `yaml:"on"` // created, updated, deleted, any
-	Run   string   `yaml:"run"`
+	Name string   `yaml:"name"`
+	On   []string `yaml:"on"` // created, updated, deleted, any
+	Run  string   `yaml:"run"`
 }
 
 type File struct {
@@ -62,4 +62,3 @@ func Run(repoRoot, event string) error {
 	}
 	return nil
 }
-

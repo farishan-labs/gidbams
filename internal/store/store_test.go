@@ -44,4 +44,3 @@ func TestStoreCRUD(t *testing.T) {
 		t.Fatal("expected invalid id error")
 	}
 }
-

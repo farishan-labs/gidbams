@@ -22,4 +22,3 @@ func TestRoundTripMarkdown(t *testing.T) {
 	}
 	_ = os.Remove(p)
 }
-

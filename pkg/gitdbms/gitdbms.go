@@ -23,4 +23,3 @@ func LoadCollection(repoRoot, dataDir string, ref CollectionRef) (*CollectionDef
 func NewStore(repoRoot string, def *CollectionDefinition) *Store {
 	return store.New(repoRoot, def)
 }
-

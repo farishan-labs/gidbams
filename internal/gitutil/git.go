@@ -33,4 +33,3 @@ func ChangedFiles(repoRoot, from, to string) ([]string, error) {
 	}
 	return files, nil
 }
-

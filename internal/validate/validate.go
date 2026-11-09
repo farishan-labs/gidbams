@@ -11,10 +11,10 @@ import (
 
 // Result holds validation outcome for one record.
 type Result struct {
-	Path    string   `json:"path"`
-	ID      string   `json:"id"`
-	Valid   bool     `json:"valid"`
-	Errors  []string `json:"errors,omitempty"`
+	Path   string   `json:"path"`
+	ID     string   `json:"id"`
+	Valid  bool     `json:"valid"`
+	Errors []string `json:"errors,omitempty"`
 }
 
 // ValidateRecord validates a record's fields against a collection definition.
@@ -197,4 +197,3 @@ func FormatErrors(results []Result) string {
 	}
 	return fmt.Sprintf("%d invalid records:\n%s", bad, b.String())
 }
-

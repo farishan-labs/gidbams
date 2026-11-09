@@ -137,4 +137,3 @@ func FieldString(fields map[string]any, key string) string {
 		return string(b)
 	}
 }
-

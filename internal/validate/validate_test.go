@@ -40,4 +40,3 @@ func TestValidateRecordMissingRequired(t *testing.T) {
 		t.Fatal("expected invalid")
 	}
 }
-

@@ -50,4 +50,3 @@ func TestBuild(t *testing.T) {
 		t.Fatalf("expected 1 row, got %d", count)
 	}
 }
-

@@ -39,4 +39,3 @@ func TestInitialize(t *testing.T) {
 		t.Fatalf("expected tools, got %d", len(tools))
 	}
 }
-

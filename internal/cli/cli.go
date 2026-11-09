@@ -376,7 +376,6 @@ func findDef(root *config.RootConfig, name string) (*config.CollectionDefinition
 	return nil, fmt.Errorf("collection not found: %s", name)
 }
 
-
 var triggersCmd = &cobra.Command{
 	Use:   "triggers run <event>",
 	Short: "Run triggers for an event (created|updated|deleted|any)",
@@ -388,7 +387,6 @@ var triggersCmd = &cobra.Command{
 		return triggers.Run(repoRoot, args[1])
 	},
 }
-
 
 func buildDerivedDB(repoRoot, dbPath string) error {
 	root, err := config.LoadRoot(repoRoot)
@@ -417,7 +415,6 @@ func buildDerivedDB(repoRoot, dbPath string) error {
 	return b.Build(colls)
 }
 
-
 var queryCmd = &cobra.Command{
 	Use:   "query <sql>",
 	Short: "Run a read-only SQL query against the derived SQLite DB",
@@ -440,7 +437,6 @@ var queryCmd = &cobra.Command{
 		return nil
 	},
 }
-
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
@@ -493,4 +489,3 @@ var exportCmd = &cobra.Command{
 		return nil
 	},
 }
-

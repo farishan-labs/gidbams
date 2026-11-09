@@ -43,4 +43,3 @@ func TestLoadRootRejectsTraversal(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
-

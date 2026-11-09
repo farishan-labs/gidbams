@@ -146,4 +146,3 @@ func sanitize(s string) string {
 func Open(dbPath string) (*sql.DB, error) {
 	return sql.Open("sqlite", dbPath)
 }
-

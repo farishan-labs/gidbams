@@ -59,4 +59,3 @@ var doctorCmd = &cobra.Command{
 		return nil
 	},
 }
-

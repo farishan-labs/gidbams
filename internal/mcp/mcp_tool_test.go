@@ -30,4 +30,3 @@ func TestToolCallSearch(t *testing.T) {
 	}
 	_ = store.New
 }
-

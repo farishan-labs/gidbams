@@ -12,10 +12,10 @@ import (
 
 // RootConfig describes a git-dbms repository.
 type RootConfig struct {
-	Version     int                `yaml:"version"`
-	DataDir     string             `yaml:"data_dir"`
-	Collections []CollectionRef    `yaml:"collections"`
-	Settings    Settings           `yaml:"settings"`
+	Version     int             `yaml:"version"`
+	DataDir     string          `yaml:"data_dir"`
+	Collections []CollectionRef `yaml:"collections"`
+	Settings    Settings        `yaml:"settings"`
 }
 
 type Settings struct {
@@ -31,13 +31,13 @@ type CollectionRef struct {
 
 // CollectionDefinition describes a single collection's schema and storage.
 type CollectionDefinition struct {
-	Name       string    `yaml:"name"`
-	RecordFile RecordFile `yaml:"record_file"`
-	Columns    []Column  `yaml:"columns"`
+	Name        string       `yaml:"name"`
+	RecordFile  RecordFile   `yaml:"record_file"`
+	Columns     []Column     `yaml:"columns"`
 	ForeignKeys []ForeignKey `yaml:"foreign_keys"`
-	DefaultView string   `yaml:"default_view"`
-	Titles     []string  `yaml:"titles"`
-	DataDir    string    `yaml:"data_dir"`
+	DefaultView string       `yaml:"default_view"`
+	Titles      []string     `yaml:"titles"`
+	DataDir     string       `yaml:"data_dir"`
 }
 
 type RecordFile struct {
@@ -169,7 +169,6 @@ func SaveRoot(repoRoot string, c *RootConfig) error {
 	return os.WriteFile(filepath.Join(repoRoot, DefaultConfigFile), b, 0o644)
 }
 
-
 func validateRef(ref CollectionRef) error {
 	if ref.Name == "" {
 		return fmt.Errorf("collection name required")
@@ -190,4 +189,3 @@ func validateRef(ref CollectionRef) error {
 	}
 	return nil
 }
-
