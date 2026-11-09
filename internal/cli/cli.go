@@ -63,6 +63,7 @@ func init() {
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(rebuildCmd)
 	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(schemaCmd)
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -523,5 +524,24 @@ var serveCmd = &cobra.Command{
 		addr := fmt.Sprintf(":%d", servePort)
 		fmt.Printf("git-dbms serve listening on %s\n", addr)
 		return http.ListenAndServe(addr, srv.Handler())
+	},
+}
+
+var schemaCmd = &cobra.Command{
+	Use:   "schema <collection>",
+	Short: "Print a collection schema",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		def, err := findDef(root, args[0])
+		if err != nil {
+			return err
+		}
+		b, _ := json.MarshalIndent(def, "", "  ")
+		fmt.Println(string(b))
+		return nil
 	},
 }
