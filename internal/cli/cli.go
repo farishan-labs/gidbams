@@ -86,6 +86,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(gcCmd)
+	rootCmd.AddCommand(templateCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(watchCmd)
@@ -976,5 +977,26 @@ var gcCmd = &cobra.Command{
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
+	},
+}
+
+var templateCmd = &cobra.Command{
+	Use:   "template",
+	Short: "Print a sample schema.yaml",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Print(`name: items
+record_file:
+  format: md
+  name: "{id}.md"
+columns:
+  - name: id
+    type: string
+    required: true
+    unique: true
+  - name: name
+    type: string
+    required: true
+`)
+		return nil
 	},
 }
