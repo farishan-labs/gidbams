@@ -79,6 +79,7 @@ func init() {
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(schemaValidateCmd)
 	rootCmd.AddCommand(cleanCmd)
+	rootCmd.AddCommand(rmCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
@@ -913,4 +914,11 @@ var cleanCmd = &cobra.Command{
 		fmt.Println("cleaned", dbPath)
 		return nil
 	},
+}
+
+var rmCmd = &cobra.Command{
+	Use:   "rm <collection> <id>",
+	Short: "Alias for delete",
+	Args:  cobra.ExactArgs(2),
+	RunE:  deleteCmd.RunE,
 }
