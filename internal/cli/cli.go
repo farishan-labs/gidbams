@@ -4,6 +4,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/farishan-labs/git-dbms/internal/config"
 	"github.com/farishan-labs/git-dbms/internal/gitutil"
+	"github.com/farishan-labs/git-dbms/internal/httpserver"
 	"github.com/farishan-labs/git-dbms/internal/mcp"
 	"github.com/farishan-labs/git-dbms/internal/record"
 	"github.com/farishan-labs/git-dbms/internal/sqlite"
@@ -60,6 +62,9 @@ func init() {
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(rebuildCmd)
+	rootCmd.AddCommand(serveCmd)
+	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
+	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
 
 var versionCmd = &cobra.Command{
@@ -504,5 +509,19 @@ var rebuildCmd = &cobra.Command{
 			dbPath = v
 		}
 		return buildDerivedDB(repoRoot, dbPath)
+	},
+}
+
+var servePort int
+var serveToken string
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Run HTTP API server",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		srv := httpserver.New(repoRoot, serveToken)
+		addr := fmt.Sprintf(":%d", servePort)
+		fmt.Printf("git-dbms serve listening on %s\n", addr)
+		return http.ListenAndServe(addr, srv.Handler())
 	},
 }
