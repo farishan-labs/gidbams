@@ -80,6 +80,8 @@ func init() {
 	rootCmd.AddCommand(schemaValidateCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(rmCmd)
+	rootCmd.AddCommand(collectionCmd)
+	collectionCmd.AddCommand(collectionCreateCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
@@ -921,4 +923,46 @@ var rmCmd = &cobra.Command{
 	Short: "Alias for delete",
 	Args:  cobra.ExactArgs(2),
 	RunE:  deleteCmd.RunE,
+}
+
+var collectionCmd = &cobra.Command{
+	Use:   "collection",
+	Short: "Manage collections",
+}
+
+var collectionCreateCmd = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create a new collection scaffold",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		dir := filepath.Join(repoRoot, root.DataDir, name)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+		schema := fmt.Sprintf("name: %s\nrecord_file:\n  format: md\n  name: \"{id}.md\"\ncolumns:\n  - name: id\n    type: string\n    required: true\n    unique: true\n  - name: name\n    type: string\n    required: true\n", name)
+		if err := os.WriteFile(filepath.Join(dir, "schema.yaml"), []byte(schema), 0o644); err != nil {
+			return err
+		}
+		// register if missing
+		found := false
+		for _, c := range root.Collections {
+			if c.Name == name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			root.Collections = append(root.Collections, config.CollectionRef{Name: name, Path: name})
+			if err := config.SaveRoot(repoRoot, root); err != nil {
+				return err
+			}
+		}
+		fmt.Println("created collection", name)
+		return nil
+	},
 }
