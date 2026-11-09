@@ -77,6 +77,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(diffCmd)
+	rootCmd.AddCommand(schemaValidateCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
@@ -872,5 +873,27 @@ var fsckCmd = &cobra.Command{
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
+	},
+}
+
+var schemaValidateCmd = &cobra.Command{
+	Use:   "schema-validate",
+	Short: "Validate collection schemas",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+			if err != nil {
+				return fmt.Errorf("%s: %w", ref.Name, err)
+			}
+			if def.Name == "" {
+				return fmt.Errorf("%s: missing name", ref.Name)
+			}
+			fmt.Printf("OK %s (%d columns)\n", ref.Name, len(def.Columns))
+		}
+		return nil
 	},
 }
