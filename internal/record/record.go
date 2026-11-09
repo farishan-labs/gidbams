@@ -104,20 +104,20 @@ func (r *Record) Save() error {
 				buf.WriteString("\n")
 			}
 		}
-		return os.WriteFile(r.Path, buf.Bytes(), 0o644)
+		return atomicWrite(r.Path, buf.Bytes())
 	case "json":
 		b, err := json.MarshalIndent(r.Fields, "", "  ")
 		if err != nil {
 			return err
 		}
 		b = append(b, '\n')
-		return os.WriteFile(r.Path, b, 0o644)
+		return atomicWrite(r.Path, b)
 	case "yaml", "yml":
 		b, err := yaml.Marshal(r.Fields)
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(r.Path, b, 0o644)
+		return atomicWrite(r.Path, b)
 	default:
 		return fmt.Errorf("unsupported format: %s", r.Format)
 	}
@@ -136,4 +136,12 @@ func FieldString(fields map[string]any, key string) string {
 		b, _ := json.Marshal(t)
 		return string(b)
 	}
+}
+
+func atomicWrite(path string, data []byte) error {
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
