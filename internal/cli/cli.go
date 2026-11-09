@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -69,6 +70,7 @@ func init() {
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(searchCmd)
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -597,6 +599,37 @@ var configCmd = &cobra.Command{
 		}
 		b, _ := json.MarshalIndent(root, "", "  ")
 		fmt.Println(string(b))
+		return nil
+	},
+}
+
+var searchCmd = &cobra.Command{
+	Use:   "search <query>",
+	Short: "Search all records across collections",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		q := strings.ToLower(args[0])
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+			if err != nil {
+				return err
+			}
+			st := store.New(repoRoot, def)
+			recs, err := st.LoadAll()
+			if err != nil {
+				return err
+			}
+			for _, r := range recs {
+				jb, _ := json.Marshal(r.Fields)
+				if strings.Contains(strings.ToLower(r.ID), q) || strings.Contains(strings.ToLower(string(jb)), q) || strings.Contains(strings.ToLower(r.Body), q) {
+					fmt.Printf("%s/%s\n", ref.Name, r.ID)
+				}
+			}
+		}
 		return nil
 	},
 }
