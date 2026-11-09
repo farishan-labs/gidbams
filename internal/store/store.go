@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
+	"syscall"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
 	"github.com/farishan-labs/git-dbms/internal/record"
@@ -17,6 +19,9 @@ type Store struct {
 	Def      *config.CollectionDefinition
 	RepoRoot string
 	Dir      string // absolute path to collection data dir
+
+	mu       sync.Mutex
+	lockFile *os.File
 }
 
 func New(repoRoot string, def *config.CollectionDefinition) *Store {
@@ -110,6 +115,11 @@ func (s *Store) Create(id string, fields map[string]any, body string) (*record.R
 	if err := validateID(id); err != nil {
 		return nil, err
 	}
+	unlock, err := s.lock()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 	fields["id"] = id
 	format := s.Def.RecordFile.Format
 	if format == "" {
@@ -149,6 +159,11 @@ func (s *Store) Create(id string, fields map[string]any, body string) (*record.R
 
 // Update overwrites an existing record's fields/body.
 func (s *Store) Update(id string, fields map[string]any, body *string) (*record.Record, error) {
+	unlock, err := s.lock()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 	r, err := s.Get(id)
 	if err != nil {
 		return nil, err
@@ -171,6 +186,11 @@ func (s *Store) Update(id string, fields map[string]any, body *string) (*record.
 
 // Delete removes a record file.
 func (s *Store) Delete(id string) error {
+	unlock, err := s.lock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
 	r, err := s.Get(id)
 	if err != nil {
 		return err
@@ -203,4 +223,28 @@ func isWithin(root, path string) bool {
 		return false
 	}
 	return true
+}
+
+func (s *Store) lock() (func(), error) {
+	s.mu.Lock()
+	if s.lockFile == nil {
+		if err := os.MkdirAll(s.Dir, 0o755); err != nil {
+			s.mu.Unlock()
+			return nil, err
+		}
+		f, err := os.OpenFile(filepath.Join(s.Dir, ".lock"), os.O_CREATE|os.O_RDWR, 0o644)
+		if err != nil {
+			s.mu.Unlock()
+			return nil, err
+		}
+		s.lockFile = f
+	}
+	if err := syscall.Flock(int(s.lockFile.Fd()), syscall.LOCK_EX); err != nil {
+		s.mu.Unlock()
+		return nil, err
+	}
+	return func() {
+		_ = syscall.Flock(int(s.lockFile.Fd()), syscall.LOCK_UN)
+		s.mu.Unlock()
+	}, nil
 }
