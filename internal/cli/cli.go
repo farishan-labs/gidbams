@@ -89,6 +89,8 @@ func init() {
 	rootCmd.AddCommand(rmCmd)
 	rootCmd.AddCommand(collectionCmd)
 	collectionCmd.AddCommand(collectionCreateCmd)
+	collectionCmd.AddCommand(collectionDeleteCmd)
+	collectionDeleteCmd.Flags().BoolVar(&collectionDeleteForce, "force", false, "confirm deletion")
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
@@ -1135,5 +1137,47 @@ var statusCmd = &cobra.Command{
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
+	},
+}
+
+var collectionDeleteForce bool
+
+var collectionDeleteCmd = &cobra.Command{
+	Use:   "delete <name>",
+	Short: "Delete a collection (requires --force)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if !collectionDeleteForce {
+			return fmt.Errorf("refusing to delete without --force")
+		}
+		name := args[0]
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		def, err := findDef(root, name)
+		if err != nil {
+			return err
+		}
+		dir := def.DataDir
+		if !filepath.IsAbs(dir) {
+			dir = filepath.Join(repoRoot, dir)
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			return err
+		}
+		// remove from config
+		filtered := []config.CollectionRef{}
+		for _, c := range root.Collections {
+			if c.Name != name {
+				filtered = append(filtered, c)
+			}
+		}
+		root.Collections = filtered
+		if err := config.SaveRoot(repoRoot, root); err != nil {
+			return err
+		}
+		fmt.Println("deleted collection", name)
+		return nil
 	},
 }
