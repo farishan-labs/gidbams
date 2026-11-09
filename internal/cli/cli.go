@@ -95,6 +95,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(gcCmd)
+	gcCmd.Flags().BoolVar(&gcAggressive, "aggressive", false, "aggressive gc")
 	rootCmd.AddCommand(templateCmd)
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statusCmd)
@@ -1052,11 +1053,17 @@ var collectionCreateCmd = &cobra.Command{
 	},
 }
 
+var gcAggressive bool
+
 var gcCmd = &cobra.Command{
 	Use:   "gc",
 	Short: "Run git gc on the repository",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := exec.Command("git", "-C", repoRoot, "gc", "--prune=now")
+		gitArgs := []string{"-C", repoRoot, "gc", "--prune=now"}
+		if gcAggressive {
+			gitArgs = append(gitArgs, "--aggressive")
+		}
+		c := exec.Command("git", gitArgs...)
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
