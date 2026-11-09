@@ -62,6 +62,8 @@ func init() {
 	validateCmd.Flags().BoolVar(&validateStrict, "strict", false, "fail on unknown fields")
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().BoolVar(&listJSON, "json", false, "output as JSON")
+	listCmd.Flags().IntVar(&listLimit, "limit", 0, "max records (0=all)")
+	listCmd.Flags().IntVar(&listOffset, "offset", 0, "skip records")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(updateCmd)
@@ -257,6 +259,14 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if listOffset > len(recs) {
+			listOffset = len(recs)
+		}
+		end := len(recs)
+		if listLimit > 0 && listOffset+listLimit < end {
+			end = listOffset + listLimit
+		}
+		recs = recs[listOffset:end]
 		if listJSON {
 			ids := []string{}
 			for _, r := range recs {
@@ -709,6 +719,7 @@ var configCmd = &cobra.Command{
 }
 
 var listJSON bool
+var listLimit, listOffset int
 var searchJSON bool
 var searchCollection string
 var collectionsJSON bool
