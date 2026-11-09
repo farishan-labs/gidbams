@@ -98,6 +98,8 @@ func init() {
 	watchCmd.Flags().IntVar(&watchInterval, "interval", 2, "poll interval seconds")
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
+	serveCmd.Flags().StringVar(&serveCert, "tls-cert", "", "TLS certificate file")
+	serveCmd.Flags().StringVar(&serveKey, "tls-key", "", "TLS key file")
 }
 
 var versionCmd = &cobra.Command{
@@ -617,6 +619,7 @@ var rebuildCmd = &cobra.Command{
 
 var servePort int
 var serveToken string
+var serveCert, serveKey string
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -625,6 +628,9 @@ var serveCmd = &cobra.Command{
 		srv := httpserver.New(repoRoot, serveToken)
 		addr := fmt.Sprintf(":%d", servePort)
 		fmt.Printf("git-dbms serve listening on %s\n", addr)
+		if serveCert != "" && serveKey != "" {
+			return http.ListenAndServeTLS(addr, serveCert, serveKey, srv.Handler())
+		}
 		return http.ListenAndServe(addr, srv.Handler())
 	},
 }
