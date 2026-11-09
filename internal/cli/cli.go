@@ -127,6 +127,9 @@ var initCmd = &cobra.Command{
 			return err
 		}
 		_ = os.MkdirAll(filepath.Join(repoRoot, config.DefaultDataDir), 0o755)
+		if _, err := os.Stat(filepath.Join(repoRoot, ".git")); err != nil {
+			_ = exec.Command("git", "-C", repoRoot, "init").Run()
+		}
 		if initExample {
 			exDir := filepath.Join(repoRoot, config.DefaultDataDir, "items")
 			_ = os.MkdirAll(exDir, 0o755)
