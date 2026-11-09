@@ -74,6 +74,19 @@ var doctorCmd = &cobra.Command{
 			if !doctorJSON {
 				fmt.Println("OK   git repository")
 			}
+			// remote check
+			remoteOut, remoteErr := exec.Command("git", "-C", repoRoot, "remote", "get-url", "origin").Output()
+			if remoteErr != nil {
+				results = append(results, checkResult{Name: "git remote", Status: "WARN", Error: "no origin remote"})
+				if !doctorJSON {
+					fmt.Println("WARN no origin remote")
+				}
+			} else {
+				results = append(results, checkResult{Name: "git remote", Status: "OK", Error: strings.TrimSpace(string(remoteOut))})
+				if !doctorJSON {
+					fmt.Printf("OK   origin %s\n", strings.TrimSpace(string(remoteOut)))
+				}
+			}
 			// check clean working tree
 			out, err := exec.Command("git", "-C", repoRoot, "status", "--porcelain").Output()
 			if err == nil && strings.TrimSpace(string(out)) != "" {
