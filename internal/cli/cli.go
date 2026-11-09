@@ -2,6 +2,8 @@
 package cli
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -73,6 +75,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(watchCmd)
+	rootCmd.AddCommand(backupCmd)
 	watchCmd.Flags().IntVar(&watchInterval, "interval", 2, "poll interval seconds")
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
@@ -693,5 +696,59 @@ var watchCmd = &cobra.Command{
 			last = cur
 			time.Sleep(time.Duration(watchInterval) * time.Second)
 		}
+	},
+}
+
+var backupCmd = &cobra.Command{
+	Use:   "backup [file]",
+	Short: "Create a tar.gz backup of the repository",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		out := filepath.Join(repoRoot, "git-dbms-backup.tar.gz")
+		if len(args) > 0 {
+			out = args[0]
+		}
+		f, err := os.Create(out)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		gz := gzip.NewWriter(f)
+		defer gz.Close()
+		tw := tar.NewWriter(gz)
+		defer tw.Close()
+		err = filepath.Walk(repoRoot, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				if filepath.Base(path) == ".git" {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			rel, err := filepath.Rel(repoRoot, path)
+			if err != nil {
+				return err
+			}
+			hdr, err := tar.FileInfoHeader(info, "")
+			if err != nil {
+				return err
+			}
+			hdr.Name = rel
+			if err := tw.WriteHeader(hdr); err != nil {
+				return err
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			_, err = tw.Write(data)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Println("backup written to", out)
+		return nil
 	},
 }
