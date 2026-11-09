@@ -76,6 +76,7 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(backupCmd)
+	rootCmd.AddCommand(migrateCmd)
 	watchCmd.Flags().IntVar(&watchInterval, "interval", 2, "poll interval seconds")
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
@@ -750,5 +751,48 @@ var backupCmd = &cobra.Command{
 		}
 		fmt.Println("backup written to", out)
 		return nil
+	},
+}
+
+var migrateCmd = &cobra.Command{
+	Use:   "migrate <collection> <source-dir>",
+	Short: "Import records from a directory into a collection",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		def, err := findDef(root, args[0])
+		if err != nil {
+			return err
+		}
+		src := args[1]
+		entries, err := os.ReadDir(src)
+		if err != nil {
+			return err
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			ext := strings.ToLower(filepath.Ext(e.Name()))
+			if ext != ".md" && ext != ".json" && ext != ".yaml" && ext != ".yml" {
+				continue
+			}
+			data, err := os.ReadFile(filepath.Join(src, e.Name()))
+			if err != nil {
+				return err
+			}
+			dest := filepath.Join(def.DataDir, e.Name())
+			if !filepath.IsAbs(dest) {
+				dest = filepath.Join(repoRoot, dest)
+			}
+			if err := os.WriteFile(dest, data, 0o644); err != nil {
+				return err
+			}
+			fmt.Println("imported", e.Name())
+		}
+		return validateCmd.RunE(cmd, []string{args[0]})
 	},
 }
