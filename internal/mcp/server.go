@@ -143,6 +143,7 @@ func toolDefs() []map[string]any {
 		{"name": "build", "description": "Rebuild the derived SQLite database", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "stats", "description": "Return record counts per collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "doctor", "description": "Check repository health", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
+		{"name": "schema", "description": "Show a collection schema", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}, "required": []string{"collection"}}},
 	}
 }
 
@@ -350,6 +351,18 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 			results = append(results, map[string]any{"collection": ref.Name, "status": status, "columns": len(def.Columns)})
 		}
 		b, _ := json.Marshal(results)
+		return string(b), nil
+	case "schema":
+		coll := strArg(args, "collection")
+		root, err := config.LoadRoot(s.RepoRoot)
+		if err != nil {
+			return "", err
+		}
+		def, err := findDef(s.RepoRoot, root, coll)
+		if err != nil {
+			return "", err
+		}
+		b, _ := json.Marshal(def)
 		return string(b), nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
