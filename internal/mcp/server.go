@@ -100,6 +100,7 @@ func toolDefs() []map[string]any {
 		{"name": "get_record", "description": "Get a record by collection and id", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}}, "required": []string{"collection", "id"}}},
 		{"name": "validate", "description": "Validate all records in a collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}}},
 		{"name": "search_records", "description": "Search records in a collection by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "query": map[string]any{"type": "string"}}, "required": []string{"collection", "query"}}},
+		{"name": "search", "description": "Search all collections by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"query": map[string]any{"type": "string"}}, "required": []string{"query"}}},
 		{"name": "query", "description": "Run a read-only SQL query against the derived SQLite DB", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"sql": map[string]any{"type": "string"}}, "required": []string{"sql"}}},
 	}
 }
@@ -214,6 +215,36 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 			}
 			if match {
 				out = append(out, r.Fields)
+			}
+		}
+		b, _ := json.Marshal(out)
+		return string(b), nil
+	case "search":
+		q := strings.ToLower(strArg(args, "query"))
+		root, err := config.LoadRoot(s.RepoRoot)
+		if err != nil {
+			return "", err
+		}
+		out := []map[string]any{}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+			if err != nil {
+				continue
+			}
+			st := store.New(s.RepoRoot, def)
+			recs, err := st.LoadAll()
+			if err != nil {
+				continue
+			}
+			for _, r := range recs {
+				jb, _ := json.Marshal(r.Fields)
+				if strings.Contains(strings.ToLower(r.ID), q) || strings.Contains(strings.ToLower(string(jb)), q) || strings.Contains(strings.ToLower(r.Body), q) {
+					entry := map[string]any{"collection": ref.Name}
+					for k, v := range r.Fields {
+						entry[k] = v
+					}
+					out = append(out, entry)
+				}
 			}
 		}
 		b, _ := json.Marshal(out)
