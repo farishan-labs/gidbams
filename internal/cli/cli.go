@@ -87,6 +87,7 @@ func init() {
 	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(gcCmd)
 	rootCmd.AddCommand(templateCmd)
+	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(watchCmd)
@@ -998,5 +999,35 @@ columns:
     required: true
 `)
 		return nil
+	},
+}
+
+var editCmd = &cobra.Command{
+	Use:   "edit <collection> <id>",
+	Short: "Open a record in $EDITOR",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		def, err := findDef(root, args[0])
+		if err != nil {
+			return err
+		}
+		st := store.New(repoRoot, def)
+		r, err := st.Get(args[1])
+		if err != nil {
+			return err
+		}
+		editor := os.Getenv("EDITOR")
+		if editor == "" {
+			editor = "vi"
+		}
+		c := exec.Command(editor, r.Path)
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
 	},
 }
