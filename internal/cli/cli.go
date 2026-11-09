@@ -55,6 +55,7 @@ func init() {
 	rootCmd.AddCommand(collectionsCmd)
 	rootCmd.AddCommand(triggersCmd)
 	rootCmd.AddCommand(doctorCmd)
+	rootCmd.AddCommand(queryCmd)
 }
 
 var versionCmd = &cobra.Command{
@@ -313,10 +314,6 @@ var buildCmd = &cobra.Command{
 	Use:   "build [db-path]",
 	Short: "Build derived SQLite database from collections",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		root, err := config.LoadRoot(repoRoot)
-		if err != nil {
-			return err
-		}
 		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
 		if len(args) > 0 {
 			dbPath = args[0]
@@ -325,26 +322,7 @@ var buildCmd = &cobra.Command{
 		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
 			dbPath = v
 		}
-		b := sqlite.New(repoRoot, dbPath)
-		type coll struct {
-			Def   *config.CollectionDefinition
-			Store *store.Store
-		}
-		colls := make([]struct {
-			Def   *config.CollectionDefinition
-			Store *store.Store
-		}, 0, len(root.Collections))
-		for _, ref := range root.Collections {
-			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
-			if err != nil {
-				return err
-			}
-			colls = append(colls, struct {
-				Def   *config.CollectionDefinition
-				Store *store.Store
-			}{Def: def, Store: store.New(repoRoot, def)})
-		}
-		if err := b.Build(colls); err != nil {
+		if err := buildDerivedDB(repoRoot, dbPath); err != nil {
 			return err
 		}
 		fmt.Println("built", dbPath)
@@ -396,6 +374,58 @@ var triggersCmd = &cobra.Command{
 			return fmt.Errorf("usage: triggers run <event>")
 		}
 		return triggers.Run(repoRoot, args[1])
+	},
+}
+
+
+func buildDerivedDB(repoRoot, dbPath string) error {
+	root, err := config.LoadRoot(repoRoot)
+	if err != nil {
+		return err
+	}
+	b := sqlite.New(repoRoot, dbPath)
+	type coll struct {
+		Def   *config.CollectionDefinition
+		Store *store.Store
+	}
+	colls := make([]struct {
+		Def   *config.CollectionDefinition
+		Store *store.Store
+	}, 0, len(root.Collections))
+	for _, ref := range root.Collections {
+		def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+		if err != nil {
+			return err
+		}
+		colls = append(colls, struct {
+			Def   *config.CollectionDefinition
+			Store *store.Store
+		}{Def: def, Store: store.New(repoRoot, def)})
+	}
+	return b.Build(colls)
+}
+
+
+var queryCmd = &cobra.Command{
+	Use:   "query <sql>",
+	Short: "Run a read-only SQL query against the derived SQLite DB",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
+		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+			dbPath = v
+		}
+		if _, err := os.Stat(dbPath); err != nil {
+			if err := buildDerivedDB(repoRoot, dbPath); err != nil {
+				return err
+			}
+		}
+		out, err := sqlite.Query(dbPath, args[0])
+		if err != nil {
+			return err
+		}
+		fmt.Println(out)
+		return nil
 	},
 }
 

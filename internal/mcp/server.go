@@ -10,6 +10,9 @@ import (
 	"strings"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
+	"path/filepath"
+
+	"github.com/farishan-labs/git-dbms/internal/sqlite"
 	"github.com/farishan-labs/git-dbms/internal/store"
 	"github.com/farishan-labs/git-dbms/internal/validate"
 )
@@ -97,6 +100,7 @@ func toolDefs() []map[string]any {
 		{"name": "get_record", "description": "Get a record by collection and id", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}}, "required": []string{"collection", "id"}}},
 		{"name": "validate", "description": "Validate all records in a collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}}},
 		{"name": "search_records", "description": "Search records in a collection by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "query": map[string]any{"type": "string"}}, "required": []string{"collection", "query"}}},
+		{"name": "query", "description": "Run a read-only SQL query against the derived SQLite DB", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"sql": map[string]any{"type": "string"}}, "required": []string{"sql"}}},
 	}
 }
 
@@ -167,6 +171,22 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		results := validate.ValidateCollection(def, fields, ids, paths)
 		b, _ := json.Marshal(results)
 		return string(b), nil
+	case "query":
+		sqlStr := strArg(args, "sql")
+		dbPath := filepath.Join(s.RepoRoot, ".gitdb", "data.db")
+		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+			dbPath = v
+		}
+		if _, err := os.Stat(dbPath); err != nil {
+			// build
+			// use cli? avoid import cycle; build via sqlite.Builder not collections. Skip: require prebuilt.
+			return "", fmt.Errorf("derived db not found: run git-dbms build first")
+		}
+		out, err := sqlite.Query(dbPath, sqlStr)
+		if err != nil {
+			return "", err
+		}
+		return out, nil
 	case "search_records":
 		coll := strArg(args, "collection")
 		q := strArg(args, "query")
