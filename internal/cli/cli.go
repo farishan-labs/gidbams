@@ -95,6 +95,7 @@ func init() {
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
+	searchCmd.Flags().StringVar(&searchCollection, "collection", "", "limit to collection")
 	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(backupCmd)
 	rootCmd.AddCommand(migrateCmd)
@@ -536,6 +537,9 @@ var statsCmd = &cobra.Command{
 		}
 		stats := map[string]int{}
 		for _, ref := range root.Collections {
+			if searchCollection != "" && ref.Name != searchCollection {
+				continue
+			}
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
 				return err
@@ -706,6 +710,7 @@ var configCmd = &cobra.Command{
 
 var listJSON bool
 var searchJSON bool
+var searchCollection string
 var collectionsJSON bool
 
 var searchCmd = &cobra.Command{
@@ -720,6 +725,9 @@ var searchCmd = &cobra.Command{
 		q := strings.ToLower(args[0])
 		results := []map[string]any{}
 		for _, ref := range root.Collections {
+			if searchCollection != "" && ref.Name != searchCollection {
+				continue
+			}
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
 				return err
@@ -928,6 +936,9 @@ var schemaValidateCmd = &cobra.Command{
 			return err
 		}
 		for _, ref := range root.Collections {
+			if searchCollection != "" && ref.Name != searchCollection {
+				continue
+			}
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
 				return fmt.Errorf("%s: %w", ref.Name, err)
