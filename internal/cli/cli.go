@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -118,7 +119,13 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("git-dbms 0.1.0")
+		info, ok := debug.ReadBuildInfo()
+		if ok {
+			fmt.Printf("git-dbms %s\n", info.Main.Version)
+			fmt.Printf("go %s\n", info.GoVersion)
+		} else {
+			fmt.Println("git-dbms 0.1.0")
+		}
 	},
 }
 
