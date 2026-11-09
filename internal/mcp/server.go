@@ -141,6 +141,7 @@ func toolDefs() []map[string]any {
 		{"name": "search", "description": "Search all collections by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"query": map[string]any{"type": "string"}}, "required": []string{"query"}}},
 		{"name": "query", "description": "Run a read-only SQL query against the derived SQLite DB", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"sql": map[string]any{"type": "string"}}, "required": []string{"sql"}}},
 		{"name": "build", "description": "Rebuild the derived SQLite database", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
+		{"name": "stats", "description": "Return record counts per collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 	}
 }
 
@@ -316,6 +317,23 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 			return "", err
 		}
 		return `{"status":"ok"}`, nil
+	case "stats":
+		root, err := config.LoadRoot(s.RepoRoot)
+		if err != nil {
+			return "", err
+		}
+		stats := map[string]int{}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+			if err != nil {
+				continue
+			}
+			st := store.New(s.RepoRoot, def)
+			recs, _ := st.LoadAll()
+			stats[ref.Name] = len(recs)
+		}
+		b, _ := json.Marshal(stats)
+		return string(b), nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
 	}
