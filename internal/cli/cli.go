@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -73,6 +74,7 @@ func init() {
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(backupCmd)
@@ -794,5 +796,16 @@ var migrateCmd = &cobra.Command{
 			fmt.Println("imported", e.Name())
 		}
 		return validateCmd.RunE(cmd, []string{args[0]})
+	},
+}
+
+var fsckCmd = &cobra.Command{
+	Use:   "fsck",
+	Short: "Run git fsck on the repository",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c := exec.Command("git", "-C", repoRoot, "fsck", "--full")
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
 	},
 }
