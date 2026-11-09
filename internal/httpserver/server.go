@@ -92,9 +92,23 @@ func (s *Server) handleRecords(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	limit := 0
+	offset := 0
+	if v := r.URL.Query().Get("limit"); v != "" {
+		fmt.Sscanf(v, "%d", &limit)
+	}
+	if v := r.URL.Query().Get("offset"); v != "" {
+		fmt.Sscanf(v, "%d", &offset)
+	}
+	if offset > len(recs) {
+		offset = len(recs)
+	}
+	if limit <= 0 || offset+limit > len(recs) {
+		limit = len(recs) - offset
+	}
 	out := []map[string]any{}
-	for _, rec := range recs {
-		out = append(out, rec.Fields)
+	for i := offset; i < offset+limit; i++ {
+		out = append(out, recs[i].Fields)
 	}
 	writeJSON(w, out)
 }
