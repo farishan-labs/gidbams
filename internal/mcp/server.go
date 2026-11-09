@@ -71,7 +71,7 @@ func (s *Server) handle(req rpcReq) rpcResp {
 		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{
 			"protocolVersion": "2024-11-05",
 			"serverInfo":      map[string]any{"name": "git-dbms", "version": "0.1.0"},
-			"capabilities":    map[string]any{"tools": map[string]any{}},
+			"capabilities":    map[string]any{"tools": map[string]any{}, "resources": map[string]any{}},
 		}}
 	case "tools/list":
 		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{"tools": toolDefs()}}
@@ -87,6 +87,44 @@ func (s *Server) handle(req rpcReq) rpcResp {
 		}
 		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{
 			"content": []map[string]any{{"type": "text", "text": res}},
+		}}
+	case "resources/list":
+		root, _ := config.LoadRoot(s.RepoRoot)
+		resources := []map[string]any{}
+		if root != nil {
+			for _, ref := range root.Collections {
+				resources = append(resources, map[string]any{
+					"uri":      "gitdb://" + ref.Name,
+					"name":     ref.Name,
+					"mimeType": "application/json",
+				})
+			}
+		}
+		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{"resources": resources}}
+	case "resources/read":
+		var p struct {
+			URI string `json:"uri"`
+		}
+		_ = json.Unmarshal(req.Params, &p)
+		// expected gitdb://collection/id
+		uri := strings.TrimPrefix(p.URI, "gitdb://")
+		parts := strings.SplitN(uri, "/", 2)
+		if len(parts) < 2 {
+			return rpcResp{JSONRPC: "2.0", ID: req.ID, Error: map[string]any{"code": -32000, "message": "invalid uri"}}
+		}
+		coll, id := parts[0], parts[1]
+		def, err := findDef(s.RepoRoot, rootOrLoad(s.RepoRoot), coll)
+		if err != nil {
+			return rpcResp{JSONRPC: "2.0", ID: req.ID, Error: map[string]any{"code": -32000, "message": err.Error()}}
+		}
+		st := store.New(s.RepoRoot, def)
+		rec, err := st.Get(id)
+		if err != nil {
+			return rpcResp{JSONRPC: "2.0", ID: req.ID, Error: map[string]any{"code": -32000, "message": err.Error()}}
+		}
+		b, _ := json.Marshal(rec.Fields)
+		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{
+			"contents": []map[string]any{{"uri": p.URI, "mimeType": "application/json", "text": string(b)}},
 		}}
 	default:
 		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{}}
@@ -252,6 +290,11 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
 	}
+}
+
+func rootOrLoad(repoRoot string) *config.RootConfig {
+	root, _ := config.LoadRoot(repoRoot)
+	return root
 }
 
 func findDef(repoRoot string, root *config.RootConfig, name string) (*config.CollectionDefinition, error) {
