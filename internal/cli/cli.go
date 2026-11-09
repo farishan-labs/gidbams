@@ -67,6 +67,7 @@ func init() {
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(configCmd)
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -573,4 +574,18 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Alias for doctor",
 	RunE:  doctorCmd.RunE,
+}
+
+var configCmd = &cobra.Command{
+	Use:   "config",
+	Short: "Print root configuration",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		b, _ := json.MarshalIndent(root, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	},
 }
