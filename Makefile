@@ -10,6 +10,14 @@ test:
 vet:
 	GOWORK=off go vet ./...
 
+fmt:
+	GOWORK=off gofmt -w .
+
+lint: vet
+	GOWORK=off gofmt -l .
+
 install:
 	GOWORK=off go install $(PKG)
-EOF
+
+clean:
+	rm -rf bin dist
