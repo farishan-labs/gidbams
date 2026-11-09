@@ -56,6 +56,8 @@ func init() {
 	rootCmd.AddCommand(triggersCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(queryCmd)
+	rootCmd.AddCommand(statsCmd)
+	rootCmd.AddCommand(exportCmd)
 }
 
 var versionCmd = &cobra.Command{
@@ -425,6 +427,59 @@ var queryCmd = &cobra.Command{
 			return err
 		}
 		fmt.Println(out)
+		return nil
+	},
+}
+
+
+var statsCmd = &cobra.Command{
+	Use:   "stats",
+	Short: "Print collection record counts",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+			if err != nil {
+				return err
+			}
+			st := store.New(repoRoot, def)
+			recs, err := st.LoadAll()
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%s: %d records\n", ref.Name, len(recs))
+		}
+		return nil
+	},
+}
+
+var exportCmd = &cobra.Command{
+	Use:   "export <collection>",
+	Short: "Export a collection as JSON array",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		root, err := config.LoadRoot(repoRoot)
+		if err != nil {
+			return err
+		}
+		def, err := findDef(root, args[0])
+		if err != nil {
+			return err
+		}
+		st := store.New(repoRoot, def)
+		recs, err := st.LoadAll()
+		if err != nil {
+			return err
+		}
+		out := []map[string]any{}
+		for _, r := range recs {
+			out = append(out, r.Fields)
+		}
+		b, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(b))
 		return nil
 	},
 }
