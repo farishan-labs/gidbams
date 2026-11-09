@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
@@ -144,6 +145,7 @@ func toolDefs() []map[string]any {
 		{"name": "stats", "description": "Return record counts per collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "doctor", "description": "Check repository health", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "schema", "description": "Show a collection schema", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}, "required": []string{"collection"}}},
+		{"name": "version", "description": "Return build version", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 	}
 }
 
@@ -364,6 +366,13 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		}
 		b, _ := json.Marshal(def)
 		return string(b), nil
+	case "version":
+		info, ok := debug.ReadBuildInfo()
+		if ok {
+			b, _ := json.Marshal(map[string]string{"version": info.Main.Version, "go": info.GoVersion})
+			return string(b), nil
+		}
+		return `{"version":"dev"}`, nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
 	}
