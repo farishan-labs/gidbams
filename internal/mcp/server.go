@@ -142,6 +142,7 @@ func toolDefs() []map[string]any {
 		{"name": "query", "description": "Run a read-only SQL query against the derived SQLite DB", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"sql": map[string]any{"type": "string"}}, "required": []string{"sql"}}},
 		{"name": "build", "description": "Rebuild the derived SQLite database", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "stats", "description": "Return record counts per collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
+		{"name": "doctor", "description": "Check repository health", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 	}
 }
 
@@ -333,6 +334,22 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 			stats[ref.Name] = len(recs)
 		}
 		b, _ := json.Marshal(stats)
+		return string(b), nil
+	case "doctor":
+		root, err := config.LoadRoot(s.RepoRoot)
+		if err != nil {
+			return "", err
+		}
+		results := []map[string]any{}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+			status := "ok"
+			if err != nil {
+				status = "error: " + err.Error()
+			}
+			results = append(results, map[string]any{"collection": ref.Name, "status": status, "columns": len(def.Columns)})
+		}
+		b, _ := json.Marshal(results)
 		return string(b), nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
