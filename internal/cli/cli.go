@@ -95,6 +95,7 @@ func init() {
 	rootCmd.AddCommand(gcCmd)
 	rootCmd.AddCommand(templateCmd)
 	rootCmd.AddCommand(logCmd)
+	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
@@ -1102,6 +1103,17 @@ var logCmd = &cobra.Command{
 			n = args[0]
 		}
 		c := exec.Command("git", "-C", repoRoot, "log", "--oneline", "-n", n)
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
+	},
+}
+
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show git status",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c := exec.Command("git", "-C", repoRoot, "status", "--short")
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
