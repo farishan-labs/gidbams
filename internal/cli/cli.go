@@ -85,6 +85,7 @@ func init() {
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
+	rootCmd.AddCommand(gcCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(watchCmd)
@@ -964,5 +965,16 @@ var collectionCreateCmd = &cobra.Command{
 		}
 		fmt.Println("created collection", name)
 		return nil
+	},
+}
+
+var gcCmd = &cobra.Command{
+	Use:   "gc",
+	Short: "Run git gc on the repository",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c := exec.Command("git", "-C", repoRoot, "gc", "--prune=now")
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
 	},
 }
