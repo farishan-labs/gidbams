@@ -55,6 +55,7 @@ func init() {
 	validateCmd.Flags().StringVar(&validateFrom, "from", "", "validate files changed since this commit")
 	validateCmd.Flags().StringVar(&validateTo, "to", "", "validate files changed up to this commit")
 	validateCmd.Flags().BoolVar(&validateJSON, "json", false, "output results as JSON")
+	validateCmd.Flags().BoolVar(&validateStrict, "strict", false, "fail on unknown fields")
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().BoolVar(&listJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(getCmd)
@@ -122,6 +123,7 @@ var initCmd = &cobra.Command{
 
 var validateFrom, validateTo string
 var validateJSON bool
+var validateStrict bool
 
 var validateCmd = &cobra.Command{
 	Use:   "validate [collection]",
@@ -174,6 +176,20 @@ var validateCmd = &cobra.Command{
 					}
 				}
 				recs = filteredRecs
+			}
+			if validateStrict {
+				colNames := map[string]bool{}
+				for _, c := range def.Columns {
+					colNames[c.Name] = true
+				}
+				for _, r := range recs {
+					for k := range r.Fields {
+						if !colNames[k] {
+							fmt.Printf("unknown field %q in %s\n", k, r.ID)
+							anyInvalid = true
+						}
+					}
+				}
 			}
 			fields := make([]*map[string]any, len(recs))
 			ids := make([]string, len(recs))
