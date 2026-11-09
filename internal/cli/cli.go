@@ -10,9 +10,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/git-dbms/internal/gitutil"
 	"github.com/farishan-labs/git-dbms/internal/mcp"
+	"github.com/farishan-labs/git-dbms/internal/record"
 	"github.com/farishan-labs/git-dbms/internal/sqlite"
 	"github.com/farishan-labs/git-dbms/internal/store"
+	"github.com/farishan-labs/git-dbms/internal/triggers"
 	"github.com/farishan-labs/git-dbms/internal/validate"
 )
 
@@ -40,6 +43,8 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(validateCmd)
+	validateCmd.Flags().StringVar(&validateFrom, "from", "", "validate files changed since this commit")
+	validateCmd.Flags().StringVar(&validateTo, "to", "", "validate files changed up to this commit")
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(createCmd)
@@ -48,6 +53,7 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(mcpCmd)
 	rootCmd.AddCommand(collectionsCmd)
+	rootCmd.AddCommand(triggersCmd)
 }
 
 var versionCmd = &cobra.Command{
@@ -72,6 +78,8 @@ var initCmd = &cobra.Command{
 	},
 }
 
+var validateFrom, validateTo string
+
 var validateCmd = &cobra.Command{
 	Use:   "validate [collection]",
 	Short: "Validate records against schemas",
@@ -90,6 +98,18 @@ var validateCmd = &cobra.Command{
 			}
 			collections = filtered
 		}
+
+		var changed map[string]bool
+		if validateFrom != "" || validateTo != "" {
+			cf, err := gitutil.ChangedFiles(repoRoot, validateFrom, validateTo)
+			if err != nil {
+				return err
+			}
+			changed = map[string]bool{}
+			for _, f := range cf {
+				changed[f] = true
+			}
+		}
 		anyInvalid := false
 		for _, ref := range collections {
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
@@ -100,6 +120,16 @@ var validateCmd = &cobra.Command{
 			recs, err := st.LoadAll()
 			if err != nil {
 				return err
+			}
+			if changed != nil {
+				filteredRecs := []*record.Record{}
+				for _, r := range recs {
+					rel, _ := filepath.Rel(repoRoot, r.Path)
+					if changed[rel] || changed[r.Path] {
+						filteredRecs = append(filteredRecs, r)
+					}
+				}
+				recs = filteredRecs
 			}
 			fields := make([]*map[string]any, len(recs))
 			ids := make([]string, len(recs))
@@ -353,5 +383,18 @@ func findDef(root *config.RootConfig, name string) (*config.CollectionDefinition
 	}
 	// maybe collection dir exists but not in config; synthesize
 	return nil, fmt.Errorf("collection not found: %s", name)
+}
+
+
+var triggersCmd = &cobra.Command{
+	Use:   "triggers run <event>",
+	Short: "Run triggers for an event (created|updated|deleted|any)",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if args[0] != "run" {
+			return fmt.Errorf("usage: triggers run <event>")
+		}
+		return triggers.Run(repoRoot, args[1])
+	},
 }
 

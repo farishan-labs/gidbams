@@ -96,6 +96,7 @@ func toolDefs() []map[string]any {
 		{"name": "list_records", "description": "List record ids in a collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}, "required": []string{"collection"}}},
 		{"name": "get_record", "description": "Get a record by collection and id", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}}, "required": []string{"collection", "id"}}},
 		{"name": "validate", "description": "Validate all records in a collection", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}}},
+		{"name": "search_records", "description": "Search records in a collection by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "query": map[string]any{"type": "string"}}, "required": []string{"collection", "query"}}},
 	}
 }
 
@@ -165,6 +166,37 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		}
 		results := validate.ValidateCollection(def, fields, ids, paths)
 		b, _ := json.Marshal(results)
+		return string(b), nil
+	case "search_records":
+		coll := strArg(args, "collection")
+		q := strArg(args, "query")
+		def, err := findDef(s.RepoRoot, root, coll)
+		if err != nil {
+			return "", err
+		}
+		st := store.New(s.RepoRoot, def)
+		recs, err := st.LoadAll()
+		if err != nil {
+			return "", err
+		}
+		out := []map[string]any{}
+		lq := strings.ToLower(q)
+		for _, r := range recs {
+			match := strings.Contains(strings.ToLower(r.ID), lq)
+			if !match {
+				jb, _ := json.Marshal(r.Fields)
+				if strings.Contains(strings.ToLower(string(jb)), lq) {
+					match = true
+				}
+			}
+			if !match && strings.Contains(strings.ToLower(r.Body), lq) {
+				match = true
+			}
+			if match {
+				out = append(out, r.Fields)
+			}
+		}
+		b, _ := json.Marshal(out)
 		return string(b), nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
