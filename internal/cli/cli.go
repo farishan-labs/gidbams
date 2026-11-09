@@ -94,6 +94,7 @@ func init() {
 	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(gcCmd)
 	rootCmd.AddCommand(templateCmd)
+	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
@@ -1086,6 +1087,21 @@ var editCmd = &cobra.Command{
 		}
 		c := exec.Command(editor, r.Path)
 		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
+	},
+}
+
+var logCmd = &cobra.Command{
+	Use:   "log [count]",
+	Short: "Show recent git commits",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		n := "10"
+		if len(args) > 0 {
+			n = args[0]
+		}
+		c := exec.Command("git", "-C", repoRoot, "log", "--oneline", "-n", n)
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
