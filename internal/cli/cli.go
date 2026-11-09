@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -71,6 +72,8 @@ func init() {
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(searchCmd)
+	rootCmd.AddCommand(watchCmd)
+	watchCmd.Flags().IntVar(&watchInterval, "interval", 2, "poll interval seconds")
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -631,5 +634,64 @@ var searchCmd = &cobra.Command{
 			}
 		}
 		return nil
+	},
+}
+
+var watchInterval int
+
+var watchCmd = &cobra.Command{
+	Use:   "watch",
+	Short: "Watch data files and rebuild derived DB on change",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		last := map[string]int64{}
+		scan := func() map[string]int64 {
+			m := map[string]int64{}
+			root, err := config.LoadRoot(repoRoot)
+			if err != nil {
+				return m
+			}
+			for _, ref := range root.Collections {
+				def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+				if err != nil {
+					continue
+				}
+				dir := def.DataDir
+				if !filepath.IsAbs(dir) {
+					dir = filepath.Join(repoRoot, dir)
+				}
+				filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
+					if err != nil || info.IsDir() {
+						return nil
+					}
+					m[p] = info.ModTime().UnixNano()
+					return nil
+				})
+			}
+			return m
+		}
+		fmt.Println("watching...")
+		for {
+			cur := scan()
+			changed := false
+			for p, t := range cur {
+				if last[p] != t {
+					changed = true
+					break
+				}
+			}
+			if len(cur) != len(last) {
+				changed = true
+			}
+			if changed && len(last) > 0 {
+				fmt.Println("change detected, rebuilding...")
+				if err := rebuildCmd.RunE(cmd, nil); err != nil {
+					fmt.Println("rebuild error:", err)
+				} else {
+					fmt.Println("rebuilt")
+				}
+			}
+			last = cur
+			time.Sleep(time.Duration(watchInterval) * time.Second)
+		}
 	},
 }
