@@ -56,6 +56,7 @@ func init() {
 	validateCmd.Flags().StringVar(&validateTo, "to", "", "validate files changed up to this commit")
 	validateCmd.Flags().BoolVar(&validateJSON, "json", false, "output results as JSON")
 	rootCmd.AddCommand(listCmd)
+	listCmd.Flags().BoolVar(&listJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(updateCmd)
@@ -63,6 +64,7 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(mcpCmd)
 	rootCmd.AddCommand(collectionsCmd)
+	collectionsCmd.Flags().BoolVar(&collectionsJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(triggersCmd)
 	rootCmd.AddCommand(doctorCmd)
 	doctorCmd.Flags().BoolVar(&doctorJSON, "json", false, "output as JSON")
@@ -78,6 +80,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
 	rootCmd.AddCommand(searchCmd)
+	searchCmd.Flags().BoolVar(&searchJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(backupCmd)
 	rootCmd.AddCommand(migrateCmd)
@@ -221,6 +224,15 @@ var listCmd = &cobra.Command{
 		recs, err := st.LoadAll()
 		if err != nil {
 			return err
+		}
+		if listJSON {
+			ids := []string{}
+			for _, r := range recs {
+				ids = append(ids, r.ID)
+			}
+			b, _ := json.MarshalIndent(ids, "", "  ")
+			fmt.Println(string(b))
+			return nil
 		}
 		for _, r := range recs {
 			fmt.Println(r.ID)
@@ -392,6 +404,15 @@ var collectionsCmd = &cobra.Command{
 		root, err := config.LoadRoot(repoRoot)
 		if err != nil {
 			return err
+		}
+		if collectionsJSON {
+			names := []string{}
+			for _, c := range root.Collections {
+				names = append(names, c.Name)
+			}
+			b, _ := json.MarshalIndent(names, "", "  ")
+			fmt.Println(string(b))
+			return nil
 		}
 		for _, c := range root.Collections {
 			fmt.Println(c.Name, c.Path)
@@ -623,6 +644,10 @@ var configCmd = &cobra.Command{
 	},
 }
 
+var listJSON bool
+var searchJSON bool
+var collectionsJSON bool
+
 var searchCmd = &cobra.Command{
 	Use:   "search <query>",
 	Short: "Search all records across collections",
@@ -633,6 +658,7 @@ var searchCmd = &cobra.Command{
 			return err
 		}
 		q := strings.ToLower(args[0])
+		results := []map[string]any{}
 		for _, ref := range root.Collections {
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
@@ -646,9 +672,21 @@ var searchCmd = &cobra.Command{
 			for _, r := range recs {
 				jb, _ := json.Marshal(r.Fields)
 				if strings.Contains(strings.ToLower(r.ID), q) || strings.Contains(strings.ToLower(string(jb)), q) || strings.Contains(strings.ToLower(r.Body), q) {
-					fmt.Printf("%s/%s\n", ref.Name, r.ID)
+					if searchJSON {
+						entry := map[string]any{"collection": ref.Name}
+						for k, v := range r.Fields {
+							entry[k] = v
+						}
+						results = append(results, entry)
+					} else {
+						fmt.Printf("%s/%s\n", ref.Name, r.ID)
+					}
 				}
 			}
+		}
+		if searchJSON {
+			b, _ := json.MarshalIndent(results, "", "  ")
+			fmt.Println(string(b))
 		}
 		return nil
 	},
