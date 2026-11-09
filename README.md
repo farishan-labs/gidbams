@@ -28,6 +28,12 @@ git-dbms build
 git-dbms mcp
 ```
 
+## Shell completion
+
+```sh
+git-dbms completion bash > /etc/bash_completion.d/git-dbms
+```
+
 ## Commands
 
 | Command | Purpose |
