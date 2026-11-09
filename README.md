@@ -6,14 +6,17 @@ Built for Faris Han Labs products (providers, forager, provider-intel, etc.) whe
 
 ## Features
 
-- Collections with typed column schemas (`.collection/definition.yaml` or `schema.yaml`)
+- Collections with typed column schemas (`schema.yaml` or `.collection/definition.yaml`)
 - Records: one file per record (Markdown frontmatter / JSON / YAML)
 - Validation: required, types, min/max, pattern, enum, unique; incremental via git diff
 - Derived SQLite build (`git-dbms build`) — git holds only text
+- Read-only SQL query (`git-dbms query`)
 - MCP server over stdio (`git-dbms mcp`) for AI agents
 - CRUD CLI (`list`, `get`, `create`, `update`, `delete`)
-- Go library (`pkg/gitdbms`) for embedding in other tools
-- Triggers/subscribers hooks (config-driven) for staleness rebuilds
+- Stats/export helpers
+- Triggers (`.gitdb/triggers.yaml`)
+- Doctor health check
+- Go library (`pkg/gitdbms`) for embedding
 
 ## Quick start
 
@@ -25,21 +28,40 @@ git-dbms build
 git-dbms mcp
 ```
 
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `init` | Initialize repository |
+| `validate [collection] [--from --to]` | Validate records |
+| `list <collection>` | List record ids |
+| `get <collection> <id>` | Print record |
+| `create/update/delete` | CRUD |
+| `build [db-path]` | Build derived SQLite |
+| `query <sql>` | Read-only SQL |
+| `stats` | Record counts |
+| `export <collection>` | JSON export |
+| `mcp` | MCP server (stdio) |
+| `collections` | List collections |
+| `triggers run <event>` | Run triggers |
+| `doctor` | Health check |
+| `version` | Version |
+
 ## Layout
 
 ```
-gitdb.yaml                 # root config
+gitdb.yaml
 data/
   providers/
-    schema.yaml            # collection definition
-    openai.md              # one record per file
+    schema.yaml
+    openai.md
 .gitdb/
-  data.db                  # derived (gitignored)
+  data.db  (gitignored)
 ```
 
 ## Status
 
-v0.1.0 — core engine. See SPEC.md.
+v0.1.0. See SPEC.md.
 
 ## License
 
