@@ -54,6 +54,7 @@ func init() {
 	rootCmd.AddCommand(mcpCmd)
 	rootCmd.AddCommand(collectionsCmd)
 	rootCmd.AddCommand(triggersCmd)
+	rootCmd.AddCommand(doctorCmd)
 }
 
 var versionCmd = &cobra.Command{
