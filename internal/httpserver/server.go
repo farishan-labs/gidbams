@@ -4,9 +4,11 @@ package httpserver
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
 	"github.com/farishan-labs/git-dbms/internal/sqlite"
@@ -30,7 +32,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/record", s.auth(s.handleRecord))
 	mux.HandleFunc("/query", s.auth(s.handleQuery))
 	mux.HandleFunc("/stats", s.auth(s.handleStats))
-	return mux
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		mux.ServeHTTP(w, r)
+		log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+	})
 }
 
 func (s *Server) auth(next http.HandlerFunc) http.HandlerFunc {
