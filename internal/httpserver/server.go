@@ -14,6 +14,7 @@ import (
 	"github.com/farishan-labs/git-dbms/internal/config"
 	"github.com/farishan-labs/git-dbms/internal/sqlite"
 	"github.com/farishan-labs/git-dbms/internal/store"
+	"github.com/farishan-labs/git-dbms/internal/validate"
 )
 
 type Server struct {
@@ -34,6 +35,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/query", s.auth(s.handleQuery))
 	mux.HandleFunc("/stats", s.auth(s.handleStats))
 	mux.HandleFunc("/search", s.auth(s.handleSearch))
+	mux.HandleFunc("/validate", s.auth(s.handleValidate))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		mux.ServeHTTP(w, r)
@@ -180,6 +182,64 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 				out = append(out, entry)
 			}
 		}
+	}
+	writeJSON(w, out)
+}
+
+func (s *Server) handleValidate(w http.ResponseWriter, r *http.Request) {
+	coll := r.URL.Query().Get("collection")
+	root, err := config.LoadRoot(s.RepoRoot)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	if coll == "" {
+		// validate all
+		all := []map[string]any{}
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+			if err != nil {
+				continue
+			}
+			st := store.New(s.RepoRoot, def)
+			recs, _ := st.LoadAll()
+			fields := make([]*map[string]any, len(recs))
+			ids := make([]string, len(recs))
+			paths := make([]string, len(recs))
+			for i, rec := range recs {
+				f := rec.Fields
+				fields[i] = &f
+				ids[i] = rec.ID
+				paths[i] = rec.Path
+			}
+			res := validate.ValidateCollection(def, fields, ids, paths)
+			for _, r := range res {
+				all = append(all, map[string]any{"id": r.ID, "valid": r.Valid, "errors": r.Errors})
+			}
+		}
+		writeJSON(w, all)
+		return
+	}
+	def, err := findDef(root, s.RepoRoot, coll)
+	if err != nil {
+		http.Error(w, err.Error(), 404)
+		return
+	}
+	st := store.New(s.RepoRoot, def)
+	recs, _ := st.LoadAll()
+	fields := make([]*map[string]any, len(recs))
+	ids := make([]string, len(recs))
+	paths := make([]string, len(recs))
+	for i, rec := range recs {
+		f := rec.Fields
+		fields[i] = &f
+		ids[i] = rec.ID
+		paths[i] = rec.Path
+	}
+	res := validate.ValidateCollection(def, fields, ids, paths)
+	out := []map[string]any{}
+	for _, r := range res {
+		out = append(out, map[string]any{"id": r.ID, "valid": r.Valid, "errors": r.Errors})
 	}
 	writeJSON(w, out)
 }
