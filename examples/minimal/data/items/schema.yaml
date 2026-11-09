@@ -1,0 +1,12 @@
+name: items
+record_file:
+  format: md
+  name: "{id}.md"
+columns:
+  - name: id
+    type: string
+    required: true
+    unique: true
+  - name: name
+    type: string
+    required: true

@@ -1,0 +1,5 @@
+version: 1
+data_dir: data
+collections:
+  - name: items
+    path: items
