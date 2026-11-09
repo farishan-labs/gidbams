@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,43 +16,66 @@ func init() {
 	// register after rootCmd exists
 }
 
+var doctorJSON bool
+
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check repository health",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		type checkResult struct {
+			Name   string `json:"name"`
+			Status string `json:"status"`
+			Error  string `json:"error,omitempty"`
+		}
 		ok := true
-		check := func(name string, err error) {
+		results := []checkResult{}
+		record := func(name string, err error) {
 			if err != nil {
 				ok = false
-				fmt.Printf("FAIL %s: %v\n", name, err)
+				results = append(results, checkResult{Name: name, Status: "FAIL", Error: err.Error()})
+				if !doctorJSON {
+					fmt.Printf("FAIL %s: %v\n", name, err)
+				}
 			} else {
-				fmt.Printf("OK   %s\n", name)
+				results = append(results, checkResult{Name: name, Status: "OK"})
+				if !doctorJSON {
+					fmt.Printf("OK   %s\n", name)
+				}
 			}
 		}
 		root, err := config.LoadRoot(repoRoot)
-		check("load root config", err)
+		record("load root config", err)
 		if err == nil {
 			for _, ref := range root.Collections {
 				def, derr := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
-				check("collection "+ref.Name, derr)
+				record("collection "+ref.Name, derr)
 				if derr == nil {
 					dir := def.DataDir
 					if !filepath.IsAbs(dir) {
 						dir = filepath.Join(repoRoot, dir)
 					}
 					if _, err := os.Stat(dir); err != nil {
-						check("data dir "+ref.Name, err)
+						record("data dir "+ref.Name, err)
 					} else {
-						fmt.Printf("OK   data dir %s\n", ref.Name)
+						record("data dir "+ref.Name, nil)
 					}
 				}
 			}
 		}
-		// git check
 		if _, err := os.Stat(filepath.Join(repoRoot, ".git")); err != nil {
-			fmt.Println("WARN not a git repository")
+			results = append(results, checkResult{Name: "git repository", Status: "WARN", Error: "not a git repository"})
+			if !doctorJSON {
+				fmt.Println("WARN not a git repository")
+			}
 		} else {
-			fmt.Println("OK   git repository")
+			results = append(results, checkResult{Name: "git repository", Status: "OK"})
+			if !doctorJSON {
+				fmt.Println("OK   git repository")
+			}
+		}
+		if doctorJSON {
+			b, _ := json.MarshalIndent(results, "", "  ")
+			fmt.Println(string(b))
 		}
 		if !ok {
 			return fmt.Errorf("doctor found issues")

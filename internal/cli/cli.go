@@ -58,6 +58,7 @@ func init() {
 	rootCmd.AddCommand(collectionsCmd)
 	rootCmd.AddCommand(triggersCmd)
 	rootCmd.AddCommand(doctorCmd)
+	doctorCmd.Flags().BoolVar(&doctorJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(queryCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(exportCmd)
