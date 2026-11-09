@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -71,6 +73,19 @@ var doctorCmd = &cobra.Command{
 			results = append(results, checkResult{Name: "git repository", Status: "OK"})
 			if !doctorJSON {
 				fmt.Println("OK   git repository")
+			}
+			// check clean working tree
+			out, err := exec.Command("git", "-C", repoRoot, "status", "--porcelain").Output()
+			if err == nil && strings.TrimSpace(string(out)) != "" {
+				results = append(results, checkResult{Name: "working tree", Status: "WARN", Error: "dirty"})
+				if !doctorJSON {
+					fmt.Println("WARN working tree dirty")
+				}
+			} else if err == nil {
+				results = append(results, checkResult{Name: "working tree", Status: "OK"})
+				if !doctorJSON {
+					fmt.Println("OK   working tree clean")
+				}
 			}
 		}
 		// derived DB freshness
