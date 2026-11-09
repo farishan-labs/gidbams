@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/farishan-labs/git-dbms/internal/config"
@@ -32,6 +33,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/record", s.auth(s.handleRecord))
 	mux.HandleFunc("/query", s.auth(s.handleQuery))
 	mux.HandleFunc("/stats", s.auth(s.handleStats))
+	mux.HandleFunc("/search", s.auth(s.handleSearch))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		mux.ServeHTTP(w, r)
@@ -148,6 +150,38 @@ func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(out))
+}
+
+func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	q := strings.ToLower(r.URL.Query().Get("q"))
+	root, err := config.LoadRoot(s.RepoRoot)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out := []map[string]any{}
+	for _, ref := range root.Collections {
+		def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+		if err != nil {
+			continue
+		}
+		st := store.New(s.RepoRoot, def)
+		recs, err := st.LoadAll()
+		if err != nil {
+			continue
+		}
+		for _, rec := range recs {
+			jb, _ := json.Marshal(rec.Fields)
+			if strings.Contains(strings.ToLower(rec.ID), q) || strings.Contains(strings.ToLower(string(jb)), q) || strings.Contains(strings.ToLower(rec.Body), q) {
+				entry := map[string]any{"collection": ref.Name}
+				for k, v := range rec.Fields {
+					entry[k] = v
+				}
+				out = append(out, entry)
+			}
+		}
+	}
+	writeJSON(w, out)
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
