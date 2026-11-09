@@ -45,6 +45,7 @@ func init() {
 	rootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVar(&validateFrom, "from", "", "validate files changed since this commit")
 	validateCmd.Flags().StringVar(&validateTo, "to", "", "validate files changed up to this commit")
+	validateCmd.Flags().BoolVar(&validateJSON, "json", false, "output results as JSON")
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(createCmd)
@@ -83,6 +84,7 @@ var initCmd = &cobra.Command{
 }
 
 var validateFrom, validateTo string
+var validateJSON bool
 
 var validateCmd = &cobra.Command{
 	Use:   "validate [collection]",
@@ -115,6 +117,7 @@ var validateCmd = &cobra.Command{
 			}
 		}
 		anyInvalid := false
+		allResults := []validate.Result{}
 		for _, ref := range collections {
 			def, err := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
 			if err != nil {
@@ -145,13 +148,20 @@ var validateCmd = &cobra.Command{
 				paths[i] = r.Path
 			}
 			results := validate.ValidateCollection(def, fields, ids, paths)
+			allResults = append(allResults, results...)
 			msg := validate.FormatErrors(results)
 			if msg != "" {
 				anyInvalid = true
-				fmt.Print(msg)
-			} else {
+				if !validateJSON {
+					fmt.Print(msg)
+				}
+			} else if !validateJSON {
 				fmt.Printf("%s: %d records OK\n", ref.Name, len(recs))
 			}
+		}
+		if validateJSON {
+			b, _ := json.MarshalIndent(allResults, "", "  ")
+			fmt.Println(string(b))
 		}
 		if anyInvalid {
 			return fmt.Errorf("validation failed")
