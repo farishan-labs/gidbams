@@ -73,6 +73,49 @@ var doctorCmd = &cobra.Command{
 				fmt.Println("OK   git repository")
 			}
 		}
+		// derived DB freshness
+		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
+		if info, err := os.Stat(dbPath); err == nil {
+			stale := false
+			root, _ := config.LoadRoot(repoRoot)
+			if root != nil {
+				for _, ref := range root.Collections {
+					def, _ := config.LoadCollectionDefinition(repoRoot, root.DataDir, ref)
+					if def == nil {
+						continue
+					}
+					dir := def.DataDir
+					if !filepath.IsAbs(dir) {
+						dir = filepath.Join(repoRoot, dir)
+					}
+					filepath.Walk(dir, func(p string, fi os.FileInfo, err error) error {
+						if err != nil || fi.IsDir() {
+							return nil
+						}
+						if fi.ModTime().After(info.ModTime()) {
+							stale = true
+						}
+						return nil
+					})
+				}
+			}
+			if stale {
+				results = append(results, checkResult{Name: "derived db", Status: "WARN", Error: "stale (run rebuild)"})
+				if !doctorJSON {
+					fmt.Println("WARN derived db stale (run rebuild)")
+				}
+			} else {
+				results = append(results, checkResult{Name: "derived db", Status: "OK"})
+				if !doctorJSON {
+					fmt.Println("OK   derived db fresh")
+				}
+			}
+		} else {
+			results = append(results, checkResult{Name: "derived db", Status: "INFO", Error: "not built"})
+			if !doctorJSON {
+				fmt.Println("INFO derived db not built")
+			}
+		}
 		if doctorJSON {
 			b, _ := json.MarshalIndent(results, "", "  ")
 			fmt.Println(string(b))
