@@ -40,5 +40,8 @@ func TestStoreCRUD(t *testing.T) {
 	if _, err := s.Get("a"); err == nil {
 		t.Fatal("expected not found")
 	}
+	if _, err := s.Create("../evil", map[string]any{"id": "../evil"}, ""); err == nil {
+		t.Fatal("expected invalid id error")
+	}
 }
 

@@ -36,3 +36,11 @@ func TestSaveLoadRoot(t *testing.T) {
 	}
 }
 
+func TestLoadRootRejectsTraversal(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "gitdb.yaml"), []byte("version: 1\ndata_dir: data\ncollections:\n  - name: bad\n    path: ../etc\n"), 0o644)
+	if _, err := LoadRoot(dir); err == nil {
+		t.Fatal("expected error")
+	}
+}
+

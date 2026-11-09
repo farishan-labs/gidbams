@@ -107,6 +107,9 @@ func (s *Store) Create(id string, fields map[string]any, body string) (*record.R
 	if id == "" {
 		return nil, fmt.Errorf("id required")
 	}
+	if err := validateID(id); err != nil {
+		return nil, err
+	}
 	fields["id"] = id
 	format := s.Def.RecordFile.Format
 	if format == "" {
@@ -128,6 +131,9 @@ func (s *Store) Create(id string, fields map[string]any, body string) (*record.R
 	}
 	// ensure nested dirs by category? flat for now
 	path := filepath.Join(s.Dir, name)
+	if !isWithin(s.Dir, path) {
+		return nil, fmt.Errorf("invalid record path for id %q", id)
+	}
 	if _, err := os.Stat(path); err == nil {
 		return nil, fmt.Errorf("record already exists: %s", id)
 	}
@@ -170,5 +176,33 @@ func (s *Store) Delete(id string) error {
 		return err
 	}
 	return os.Remove(r.Path)
+}
+
+
+func validateID(id string) error {
+	if id == "" {
+		return fmt.Errorf("id required")
+	}
+	if strings.ContainsAny(id, "/\\") {
+		return fmt.Errorf("id must not contain path separators: %q", id)
+	}
+	if id == "." || id == ".." {
+		return fmt.Errorf("invalid id: %q", id)
+	}
+	if strings.Contains(id, "..") {
+		return fmt.Errorf("invalid id: %q", id)
+	}
+	return nil
+}
+
+func isWithin(root, path string) bool {
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return false
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return false
+	}
+	return true
 }
 

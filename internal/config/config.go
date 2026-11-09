@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -87,6 +88,11 @@ func LoadRoot(repoRoot string) (*RootConfig, error) {
 	if c.Version == 0 {
 		c.Version = 1
 	}
+	for i := range c.Collections {
+		if err := validateRef(c.Collections[i]); err != nil {
+			return nil, err
+		}
+	}
 	return &c, nil
 }
 
@@ -161,5 +167,27 @@ func SaveRoot(repoRoot string, c *RootConfig) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(repoRoot, DefaultConfigFile), b, 0o644)
+}
+
+
+func validateRef(ref CollectionRef) error {
+	if ref.Name == "" {
+		return fmt.Errorf("collection name required")
+	}
+	if filepath.IsAbs(ref.Path) {
+		return fmt.Errorf("collection path must be relative: %s", ref.Path)
+	}
+	if strings.Contains(ref.Path, "..") {
+		return fmt.Errorf("collection path must not contain '..': %s", ref.Path)
+	}
+	if ref.Schema != "" {
+		if filepath.IsAbs(ref.Schema) {
+			return fmt.Errorf("schema path must be relative: %s", ref.Schema)
+		}
+		if strings.Contains(ref.Schema, "..") {
+			return fmt.Errorf("schema path must not contain '..': %s", ref.Schema)
+		}
+	}
+	return nil
 }
 

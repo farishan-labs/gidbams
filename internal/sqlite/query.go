@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	_ "modernc.org/sqlite"
@@ -16,7 +17,12 @@ func Query(dbPath, q string) (string, error) {
 	if !strings.HasPrefix(qt, "select") && !strings.HasPrefix(qt, "pragma") && !strings.HasPrefix(qt, "with") {
 		return "", fmt.Errorf("only SELECT/PRAGMA/WITH queries are allowed")
 	}
-	db, err := sql.Open("sqlite", dbPath)
+	abs, err := filepath.Abs(dbPath)
+	if err != nil {
+		return "", err
+	}
+	dsn := "file:" + abs + "?mode=ro"
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return "", err
 	}
