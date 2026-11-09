@@ -140,6 +140,7 @@ func toolDefs() []map[string]any {
 		{"name": "search_records", "description": "Search records in a collection by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "query": map[string]any{"type": "string"}}, "required": []string{"collection", "query"}}},
 		{"name": "search", "description": "Search all collections by substring", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"query": map[string]any{"type": "string"}}, "required": []string{"query"}}},
 		{"name": "query", "description": "Run a read-only SQL query against the derived SQLite DB", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"sql": map[string]any{"type": "string"}}, "required": []string{"sql"}}},
+		{"name": "build", "description": "Rebuild the derived SQLite database", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 	}
 }
 
@@ -287,6 +288,34 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		}
 		b, _ := json.Marshal(out)
 		return string(b), nil
+	case "build":
+		root, err := config.LoadRoot(s.RepoRoot)
+		if err != nil {
+			return "", err
+		}
+		dbPath := filepath.Join(s.RepoRoot, ".gitdb", "data.db")
+		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+			dbPath = v
+		}
+		b := sqlite.New(s.RepoRoot, dbPath)
+		colls := make([]struct {
+			Def   *config.CollectionDefinition
+			Store *store.Store
+		}, 0, len(root.Collections))
+		for _, ref := range root.Collections {
+			def, err := config.LoadCollectionDefinition(s.RepoRoot, root.DataDir, ref)
+			if err != nil {
+				return "", err
+			}
+			colls = append(colls, struct {
+				Def   *config.CollectionDefinition
+				Store *store.Store
+			}{Def: def, Store: store.New(s.RepoRoot, def)})
+		}
+		if err := b.Build(colls); err != nil {
+			return "", err
+		}
+		return `{"status":"ok"}`, nil
 	default:
 		return "", fmt.Errorf("unknown tool: %s", name)
 	}
