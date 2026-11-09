@@ -78,6 +78,7 @@ func init() {
 	rootCmd.AddCommand(schemaCmd)
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(schemaValidateCmd)
+	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(fsckCmd)
@@ -894,6 +895,22 @@ var schemaValidateCmd = &cobra.Command{
 			}
 			fmt.Printf("OK %s (%d columns)\n", ref.Name, len(def.Columns))
 		}
+		return nil
+	},
+}
+
+var cleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "Remove derived database and build artifacts",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
+		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+			dbPath = v
+		}
+		if err := os.Remove(dbPath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		fmt.Println("cleaned", dbPath)
 		return nil
 	},
 }
