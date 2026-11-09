@@ -4,6 +4,7 @@ package cli
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -73,6 +74,7 @@ func init() {
 	rootCmd.AddCommand(statsCmd)
 	statsCmd.Flags().BoolVar(&statsJSON, "json", false, "output as JSON")
 	rootCmd.AddCommand(exportCmd)
+	exportCmd.Flags().StringVar(&exportFormat, "format", "json", "output format: json or csv")
 	rootCmd.AddCommand(rebuildCmd)
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(schemaCmd)
@@ -569,6 +571,24 @@ var exportCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if exportFormat == "csv" {
+			w := csv.NewWriter(os.Stdout)
+			// header from first record or columns
+			header := []string{}
+			for _, c := range def.Columns {
+				header = append(header, c.Name)
+			}
+			_ = w.Write(header)
+			for _, r := range recs {
+				row := []string{}
+				for _, c := range def.Columns {
+					row = append(row, fmt.Sprintf("%v", r.Fields[c.Name]))
+				}
+				_ = w.Write(row)
+			}
+			w.Flush()
+			return nil
+		}
 		out := []map[string]any{}
 		for _, r := range recs {
 			out = append(out, r.Fields)
@@ -920,6 +940,8 @@ var cleanCmd = &cobra.Command{
 		return nil
 	},
 }
+
+var exportFormat string
 
 var rmCmd = &cobra.Command{
 	Use:   "rm <collection> <id>",
