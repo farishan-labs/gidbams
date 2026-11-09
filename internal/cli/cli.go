@@ -64,6 +64,7 @@ func init() {
 	rootCmd.AddCommand(rebuildCmd)
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(schemaCmd)
+	rootCmd.AddCommand(diffCmd)
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 }
@@ -542,6 +543,26 @@ var schemaCmd = &cobra.Command{
 		}
 		b, _ := json.MarshalIndent(def, "", "  ")
 		fmt.Println(string(b))
+		return nil
+	},
+}
+
+var diffCmd = &cobra.Command{
+	Use:   "diff <from> [to]",
+	Short: "List records changed between commits",
+	Args:  cobra.RangeArgs(1, 2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		to := ""
+		if len(args) == 2 {
+			to = args[1]
+		}
+		files, err := gitutil.ChangedFiles(repoRoot, args[0], to)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			fmt.Println(f)
+		}
 		return nil
 	},
 }
