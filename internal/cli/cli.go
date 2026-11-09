@@ -108,6 +108,7 @@ func init() {
 	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
 	serveCmd.Flags().StringVar(&serveCert, "tls-cert", "", "TLS certificate file")
 	serveCmd.Flags().StringVar(&serveKey, "tls-key", "", "TLS key file")
+	serveCmd.Flags().StringVar(&serveCORS, "cors", "", "CORS allowed origin")
 }
 
 var versionCmd = &cobra.Command{
@@ -642,6 +643,7 @@ var rebuildCmd = &cobra.Command{
 var servePort int
 var serveToken string
 var serveCert, serveKey string
+var serveCORS string
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -650,7 +652,20 @@ var serveCmd = &cobra.Command{
 		srv := httpserver.New(repoRoot, serveToken)
 		addr := fmt.Sprintf(":%d", servePort)
 		fmt.Printf("git-dbms serve listening on %s\n", addr)
-		httpSrv := &http.Server{Addr: addr, Handler: srv.Handler()}
+		handler := srv.Handler()
+		if serveCORS != "" {
+			handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Access-Control-Allow-Origin", serveCORS)
+				w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type")
+				if r.Method == http.MethodOptions {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				srv.Handler().ServeHTTP(w, r)
+			})
+		}
+		httpSrv := &http.Server{Addr: addr, Handler: handler}
 		go func() {
 			sigCh := make(chan os.Signal, 1)
 			signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
