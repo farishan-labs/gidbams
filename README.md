@@ -92,7 +92,7 @@ data/
 
 ## Status
 
-v0.1.0. See SPEC.md.
+v0.1.0. See `openspec/specs/` for behavior contracts.
 
 ## License
 

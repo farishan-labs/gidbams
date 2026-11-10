@@ -15,4 +15,4 @@
 
 - [ ] 3.1 Add integration tests in `internal/mcp` covering create/update/delete success and validation/not-found errors
 - [ ] 3.2 Run `gofmt -w .`, `go vet ./...`, `go test ./internal/mcp/...`
-- [ ] 3.3 Update README MCP tools list and SPEC.md MCP section
+- [ ] 3.3 Update README MCP tools list and openspec/specs/mcp-server spec
