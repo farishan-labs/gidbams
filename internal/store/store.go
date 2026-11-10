@@ -32,6 +32,28 @@ func New(repoRoot string, def *config.CollectionDefinition) *Store {
 	return &Store{Def: def, RepoRoot: repoRoot, Dir: dir}
 }
 
+// matchesRecordFile reports whether path's basename matches the collection's
+// configured record file name pattern, with "{id}" treated as a wildcard.
+func (s *Store) matchesRecordFile(p string) bool {
+	name := ""
+	if s != nil && s.Def != nil {
+		name = s.Def.RecordFile.Name
+	}
+	if name == "" {
+		name = "{id}.md"
+	}
+	pattern := filepath.Base(name)
+	pattern = strings.ReplaceAll(pattern, "{id}", "*")
+	if pattern == "" || pattern == "." {
+		pattern = "*"
+	}
+	matched, err := filepath.Match(pattern, filepath.Base(p))
+	if err != nil {
+		return false
+	}
+	return matched
+}
+
 // List returns sorted record file paths in the collection dir (recursive).
 func (s *Store) List() ([]string, error) {
 	var files []string
@@ -51,10 +73,13 @@ func (s *Store) List() ([]string, error) {
 		if base == "schema.yaml" || base == "schema.yml" || base == "definition.yaml" || base == "definition.yml" {
 			return nil
 		}
-		ext := strings.ToLower(filepath.Ext(p))
-		if ext == ".md" || ext == ".mdx" || ext == ".json" || ext == ".yaml" || ext == ".yml" {
-			files = append(files, p)
+		// Only ingest files whose basename matches the collection's record file
+		// name pattern (e.g. "{id}.md" -> "*.md", "{id}/README.md" -> "README.md").
+		// This keeps supporting/asset files from being treated as records.
+		if !s.matchesRecordFile(p) {
+			return nil
 		}
+		files = append(files, p)
 		return nil
 	})
 	if err != nil {
