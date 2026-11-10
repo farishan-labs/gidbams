@@ -9,5 +9,5 @@
 
 - [x] 2.1 Commit and push the workflow fix to main
 - [x] 2.2 Trigger the workflow via `workflow_dispatch` and confirm a run completes green with jobs created
-- [ ] 2.3 Push a tag (e.g. `v0.2.0`) and confirm a GitHub Release is published with `gidbams` (linux + macos) and `SHA256SUMS`
+- [x] 2.3 Push a tag (e.g. `v0.2.0`) and confirm a GitHub Release is published with `gidbams` (linux + macos) and `SHA256SUMS`
 - [x] 2.4 Document the install-from-release steps in README (optional, small)
