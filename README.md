@@ -36,7 +36,7 @@ See `research/topics/gidbams/` and `research/topics/git-as-ssot-db/` for the ful
 - Validation: required, types, min/max, pattern, enum, unique; incremental via git diff
 - Derived SQLite build (`gidbams build`) — git holds only text
 - Read-only SQL query (`gidbams query`)
-- MCP server over stdio (`gidbams mcp`) for AI agents
+- MCP server over stdio (`gidbams mcp`) for AI agents, exposing `create_record`, `update_record`, `delete_record` among other tools
 - CRUD CLI (`list`, `get`, `create`, `update`, `delete`)
 - Stats/export helpers
 - Triggers (`.gitdb/triggers.yaml`)

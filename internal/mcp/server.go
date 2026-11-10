@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"reflect"
 	"runtime/debug"
 	"strings"
 
 	"github.com/farishan-labs/gidbams/internal/config"
-	"path/filepath"
-
 	"github.com/farishan-labs/gidbams/internal/sqlite"
 	"github.com/farishan-labs/gidbams/internal/store"
 	"github.com/farishan-labs/gidbams/internal/validate"
@@ -146,6 +146,9 @@ func toolDefs() []map[string]any {
 		{"name": "doctor", "description": "Check repository health", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
 		{"name": "schema", "description": "Show a collection schema", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}}, "required": []string{"collection"}}},
 		{"name": "version", "description": "Return build version", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{}}},
+		{"name": "create_record", "description": "Create a validated record", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}, "fields": map[string]any{"type": "object"}}, "required": []string{"collection", "id", "fields"}}},
+		{"name": "update_record", "description": "Update a validated record", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}, "fields": map[string]any{"type": "object"}}, "required": []string{"collection", "id", "fields"}}},
+		{"name": "delete_record", "description": "Delete a record", "inputSchema": map[string]any{"type": "object", "properties": map[string]any{"collection": map[string]any{"type": "string"}, "id": map[string]any{"type": "string"}}, "required": []string{"collection", "id"}}},
 	}
 }
 
@@ -366,6 +369,79 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		}
 		b, _ := json.Marshal(def)
 		return string(b), nil
+	case "create_record":
+		coll := strArg(args, "collection")
+		id := strArg(args, "id")
+		fields := fieldsArg(args, "fields")
+		def, err := findDef(s.RepoRoot, root, coll)
+		if err != nil {
+			return "", err
+		}
+		st := store.New(s.RepoRoot, def)
+		fcopy := make(map[string]any, len(fields)+1)
+		for k, v := range fields {
+			fcopy[k] = v
+		}
+		if _, ok := fcopy["id"]; !ok {
+			fcopy["id"] = id
+		}
+		res := validate.ValidateRecord(def, &fcopy, id, "")
+		if !res.Valid {
+			return "", fmt.Errorf("validation failed: %s", strings.Join(res.Errors, "; "))
+		}
+		if err := uniqueConflict(st, def, id, fcopy, false); err != nil {
+			return "", err
+		}
+		if _, err := st.Create(id, fcopy, ""); err != nil {
+			return "", err
+		}
+		return `{"status":"ok"}`, nil
+	case "update_record":
+		coll := strArg(args, "collection")
+		id := strArg(args, "id")
+		fields := fieldsArg(args, "fields")
+		def, err := findDef(s.RepoRoot, root, coll)
+		if err != nil {
+			return "", err
+		}
+		st := store.New(s.RepoRoot, def)
+		existing, err := st.Get(id)
+		if err != nil {
+			return "", err
+		}
+		merged := make(map[string]any, len(existing.Fields)+len(fields))
+		for k, v := range existing.Fields {
+			merged[k] = v
+		}
+		for k, v := range fields {
+			merged[k] = v
+		}
+		if _, ok := merged["id"]; !ok {
+			merged["id"] = id
+		}
+		res := validate.ValidateRecord(def, &merged, id, existing.Path)
+		if !res.Valid {
+			return "", fmt.Errorf("validation failed: %s", strings.Join(res.Errors, "; "))
+		}
+		if err := uniqueConflict(st, def, id, merged, true); err != nil {
+			return "", err
+		}
+		if _, err := st.Update(id, merged, nil); err != nil {
+			return "", err
+		}
+		return `{"status":"ok"}`, nil
+	case "delete_record":
+		coll := strArg(args, "collection")
+		id := strArg(args, "id")
+		def, err := findDef(s.RepoRoot, root, coll)
+		if err != nil {
+			return "", err
+		}
+		st := store.New(s.RepoRoot, def)
+		if err := st.Delete(id); err != nil {
+			return "", err
+		}
+		return `{"status":"ok"}`, nil
 	case "version":
 		info, ok := debug.ReadBuildInfo()
 		if ok {
@@ -390,6 +466,38 @@ func findDef(repoRoot string, root *config.RootConfig, name string) (*config.Col
 		}
 	}
 	return nil, fmt.Errorf("collection not found: %s", name)
+}
+
+func fieldsArg(args map[string]any, key string) map[string]any {
+	if v, ok := args[key].(map[string]any); ok && v != nil {
+		return v
+	}
+	return map[string]any{}
+}
+
+func uniqueConflict(st *store.Store, def *config.CollectionDefinition, id string, fields map[string]any, isUpdate bool) error {
+	recs, err := st.LoadAll()
+	if err != nil {
+		return nil
+	}
+	for _, col := range def.Columns {
+		if !col.Unique {
+			continue
+		}
+		v := fields[col.Name]
+		if v == nil {
+			continue
+		}
+		for _, r := range recs {
+			if isUpdate && r.ID == id {
+				continue
+			}
+			if rv, ok := r.Fields[col.Name]; ok && rv != nil && reflect.DeepEqual(rv, v) {
+				return fmt.Errorf("duplicate value %v for unique field %q", v, col.Name)
+			}
+		}
+	}
+	return nil
 }
 
 func strArg(args map[string]any, key string) string {

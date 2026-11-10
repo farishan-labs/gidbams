@@ -12,7 +12,7 @@ The system SHALL run an MCP server over stdio when invoking `gidbams mcp`.
 - **THEN** the process serves MCP requests over stdin/stdout
 
 ### Requirement: MCP tools
-The MCP server SHALL expose tools for listing collections, listing records, getting a record, validating, searching records (per-collection and global), running read-only SQL queries, rebuilding the derived database, returning stats, running doctor checks, showing a collection schema, and returning the build version.
+The MCP server SHALL expose tools for listing collections, listing records, getting a record, creating a record, updating a record, deleting a record, validating, searching records (per-collection and global), running read-only SQL queries, rebuilding the derived database, returning stats, running doctor checks, showing a collection schema, and returning the build version.
 
 #### Scenario: Tool listed
 - **WHEN** an MCP client calls `tools/list`
