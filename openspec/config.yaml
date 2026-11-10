@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  Project: gidbams — git-as-a-source-of-truth database engine (Go).
+  Tech stack: Go 1.26, cobra CLI, modernc.org/sqlite (pure Go, no CGO), MCP over stdio, HTTP server.
+  Layout: cmd/gidbams (entry), internal/* (config, store, validate, sqlite, mcp, httpserver, cli, record, triggers, gitutil), pkg/gidbams (public embeddable API).
+  Runtime data names (unchanged for compat): gitdb.yaml, .gitdb/, env vars currently GIT_DBMS_* (being renamed to GIDBAMS_*).
+  Module path: github.com/farishan-labs/gidbams. Binary: gidbams.
+  Conventions: conventional commits, gofmt, go vet, race tests in CI, MIT license.
+  Tests: go test ./..., fuzz on record parsing, integration tests in internal/cli and internal/httpserver and internal/mcp.
+  CI: .github/workflows/ci.yml (green), .github/workflows/release.yml (broken — no releases published yet).
+  Positioning: git-files-first SSOT + typed schemas + derived SQLite + MCP/CLI for agents + Go embedding; markdown-frontmatter records.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

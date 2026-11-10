@@ -1,5 +1,10 @@
 # gidbams Specification (v0.1)
 
+> Note: Behavior specs have been broken into OpenSpec capability specs under
+> `openspec/specs/` (record-layout, validation, derived-store, mcp-server,
+> triggers). SPEC.md is retained as a high-level overview; the openspec specs
+> are the authoritative behavior contracts.
+
 ## Purpose
 Production-ready git-as-SSOT database engine for Faris Han Labs products.
 
