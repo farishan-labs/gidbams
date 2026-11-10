@@ -1,10 +1,10 @@
-// Package gitdbms provides an embeddable API for git-as-SSOT databases.
-package gitdbms
+// Package gidbams provides an embeddable API for git-as-SSOT databases.
+package gidbams
 
 import (
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/store"
-	"github.com/farishan-labs/git-dbms/internal/validate"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/store"
+	"github.com/farishan-labs/gidbams/internal/validate"
 )
 
 // Re-export types

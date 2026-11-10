@@ -1,4 +1,4 @@
-module github.com/farishan-labs/git-dbms
+module github.com/farishan-labs/gidbams
 
 go 1.26.0
 

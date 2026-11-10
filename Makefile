@@ -1,5 +1,5 @@
-BINARY=git-dbms
-PKG=./cmd/git-dbms
+BINARY=gidbams
+PKG=./cmd/gidbams
 
 build:
 	GOWORK=off go build -o bin/$(BINARY) $(PKG)

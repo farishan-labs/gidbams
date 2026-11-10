@@ -1,4 +1,4 @@
-// Package cli implements the git-dbms command line.
+// Package cli implements the gidbams command line.
 package cli
 
 import (
@@ -20,15 +20,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/gitutil"
-	"github.com/farishan-labs/git-dbms/internal/httpserver"
-	"github.com/farishan-labs/git-dbms/internal/mcp"
-	"github.com/farishan-labs/git-dbms/internal/record"
-	"github.com/farishan-labs/git-dbms/internal/sqlite"
-	"github.com/farishan-labs/git-dbms/internal/store"
-	"github.com/farishan-labs/git-dbms/internal/triggers"
-	"github.com/farishan-labs/git-dbms/internal/validate"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/gitutil"
+	"github.com/farishan-labs/gidbams/internal/httpserver"
+	"github.com/farishan-labs/gidbams/internal/mcp"
+	"github.com/farishan-labs/gidbams/internal/record"
+	"github.com/farishan-labs/gidbams/internal/sqlite"
+	"github.com/farishan-labs/gidbams/internal/store"
+	"github.com/farishan-labs/gidbams/internal/triggers"
+	"github.com/farishan-labs/gidbams/internal/validate"
 )
 
 var repoRoot string
@@ -39,7 +39,7 @@ func Execute() error {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "git-dbms",
+	Use:   "gidbams",
 	Short: "Git as a source-of-truth database engine",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if repoRoot == "" {
@@ -121,17 +121,17 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		info, ok := debug.ReadBuildInfo()
 		if ok {
-			fmt.Printf("git-dbms %s\n", info.Main.Version)
+			fmt.Printf("gidbams %s\n", info.Main.Version)
 			fmt.Printf("go %s\n", info.GoVersion)
 		} else {
-			fmt.Println("git-dbms 0.1.0")
+			fmt.Println("gidbams 0.1.0")
 		}
 	},
 }
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize a git-dbms repository (creates gitdb.yaml)",
+	Short: "Initialize a gidbams repository (creates gitdb.yaml)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := &config.RootConfig{Version: 1, DataDir: config.DefaultDataDir, Settings: config.Settings{DefaultBranch: "main", ValidateOnCI: true}}
 		if err := config.SaveRoot(repoRoot, c); err != nil {
@@ -150,7 +150,7 @@ var initCmd = &cobra.Command{
 			c.Collections = append(c.Collections, config.CollectionRef{Name: "items", Path: "items"})
 			_ = config.SaveRoot(repoRoot, c)
 		}
-		fmt.Println("initialized git-dbms repo at", repoRoot)
+		fmt.Println("initialized gidbams repo at", repoRoot)
 		return nil
 	},
 }
@@ -661,7 +661,7 @@ var serveCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		srv := httpserver.New(repoRoot, serveToken)
 		addr := fmt.Sprintf(":%d", servePort)
-		fmt.Printf("git-dbms serve listening on %s\n", addr)
+		fmt.Printf("gidbams serve listening on %s\n", addr)
 		handler := srv.Handler()
 		if serveCORS != "" {
 			handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -864,7 +864,7 @@ var backupCmd = &cobra.Command{
 	Use:   "backup [file]",
 	Short: "Create a tar.gz backup of the repository",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		out := filepath.Join(repoRoot, "git-dbms-backup.tar.gz")
+		out := filepath.Join(repoRoot, "gidbams-backup.tar.gz")
 		if len(args) > 0 {
 			out = args[0]
 		}

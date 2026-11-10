@@ -18,7 +18,7 @@ func TestInitialize(t *testing.T) {
 	if err := s.Run(); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "git-dbms") {
+	if !strings.Contains(out.String(), "gidbams") {
 		t.Fatalf("expected server info, got %s", out.String())
 	}
 	var lines []string

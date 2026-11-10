@@ -1,4 +1,4 @@
-# git-dbms
+# gidbams
 
 Production-ready **git-as-a-source-of-truth database engine**. Treats a Git repository as the authoritative store: records are plain text files (Markdown with YAML frontmatter, JSON, or YAML), reviewed via PRs, versioned by commits, queried via a derived SQLite cache and an MCP server.
 
@@ -9,29 +9,29 @@ Built for Faris Han Labs products (providers, forager, provider-intel, etc.) whe
 - Collections with typed column schemas (`schema.yaml` or `.collection/definition.yaml`)
 - Records: one file per record (Markdown frontmatter / JSON / YAML)
 - Validation: required, types, min/max, pattern, enum, unique; incremental via git diff
-- Derived SQLite build (`git-dbms build`) — git holds only text
-- Read-only SQL query (`git-dbms query`)
-- MCP server over stdio (`git-dbms mcp`) for AI agents
+- Derived SQLite build (`gidbams build`) — git holds only text
+- Read-only SQL query (`gidbams query`)
+- MCP server over stdio (`gidbams mcp`) for AI agents
 - CRUD CLI (`list`, `get`, `create`, `update`, `delete`)
 - Stats/export helpers
 - Triggers (`.gitdb/triggers.yaml`)
 - Doctor health check
-- Go library (`pkg/gitdbms`) for embedding
+- Go library (`pkg/gidbams`) for embedding
 
 ## Quick start
 
 ```sh
-git-dbms init
+gidbams init
 # add collections under data/<name>/ with schema.yaml
-git-dbms validate
-git-dbms build
-git-dbms mcp
+gidbams validate
+gidbams build
+gidbams mcp
 ```
 
 ## Shell completion
 
 ```sh
-git-dbms completion bash > /etc/bash_completion.d/git-dbms
+gidbams completion bash > /etc/bash_completion.d/gidbams
 ```
 
 ## Commands

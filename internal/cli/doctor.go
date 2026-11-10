@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/gidbams/internal/config"
 )
 
 // doctorCmd is defined in cli.go? We'll add via init in this file's init.

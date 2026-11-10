@@ -10,12 +10,12 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/gidbams/internal/config"
 	"path/filepath"
 
-	"github.com/farishan-labs/git-dbms/internal/sqlite"
-	"github.com/farishan-labs/git-dbms/internal/store"
-	"github.com/farishan-labs/git-dbms/internal/validate"
+	"github.com/farishan-labs/gidbams/internal/sqlite"
+	"github.com/farishan-labs/gidbams/internal/store"
+	"github.com/farishan-labs/gidbams/internal/validate"
 )
 
 type Server struct {
@@ -71,7 +71,7 @@ func (s *Server) handle(req rpcReq) rpcResp {
 	case "initialize":
 		return rpcResp{JSONRPC: "2.0", ID: req.ID, Result: map[string]any{
 			"protocolVersion": "2024-11-05",
-			"serverInfo":      map[string]any{"name": "git-dbms", "version": "0.1.0"},
+			"serverInfo":      map[string]any{"name": "gidbams", "version": "0.1.0"},
 			"capabilities":    map[string]any{"tools": map[string]any{}, "resources": map[string]any{}},
 		}}
 	case "tools/list":
@@ -225,7 +225,7 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 		if _, err := os.Stat(dbPath); err != nil {
 			// build
 			// use cli? avoid import cycle; build via sqlite.Builder not collections. Skip: require prebuilt.
-			return "", fmt.Errorf("derived db not found: run git-dbms build first")
+			return "", fmt.Errorf("derived db not found: run gidbams build first")
 		}
 		out, err := sqlite.Query(dbPath, sqlStr)
 		if err != nil {

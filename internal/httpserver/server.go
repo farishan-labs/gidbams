@@ -1,4 +1,4 @@
-// Package httpserver provides a small HTTP API over git-dbms.
+// Package httpserver provides a small HTTP API over gidbams.
 package httpserver
 
 import (
@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/sqlite"
-	"github.com/farishan-labs/git-dbms/internal/store"
-	"github.com/farishan-labs/git-dbms/internal/validate"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/sqlite"
+	"github.com/farishan-labs/gidbams/internal/store"
+	"github.com/farishan-labs/gidbams/internal/validate"
 )
 
 type Server struct {

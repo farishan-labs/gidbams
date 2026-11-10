@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/gidbams/internal/config"
 )
 
 // Result holds validation outcome for one record.

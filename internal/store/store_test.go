@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/gidbams/internal/config"
 )
 
 func TestStoreCRUD(t *testing.T) {

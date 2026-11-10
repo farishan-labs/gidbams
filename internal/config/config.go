@@ -1,4 +1,4 @@
-// Package config loads git-dbms repository configuration and collection definitions.
+// Package config loads gidbams repository configuration and collection definitions.
 package config
 
 import (
@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// RootConfig describes a git-dbms repository.
+// RootConfig describes a gidbams repository.
 type RootConfig struct {
 	Version     int             `yaml:"version"`
 	DataDir     string          `yaml:"data_dir"`

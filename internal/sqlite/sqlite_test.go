@@ -8,8 +8,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/store"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/store"
 )
 
 func TestBuild(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
+	"github.com/farishan-labs/gidbams/internal/config"
 )
 
 func TestConcurrentCreates(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/farishan-labs/git-dbms/internal/cli"
+	"github.com/farishan-labs/gidbams/internal/cli"
 )
 
 func main() {

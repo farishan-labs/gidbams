@@ -10,8 +10,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/record"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/record"
 )
 
 // Store is a collection store rooted at a directory.

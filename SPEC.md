@@ -1,4 +1,4 @@
-# git-dbms Specification (v0.1)
+# gidbams Specification (v0.1)
 
 ## Purpose
 Production-ready git-as-SSOT database engine for Faris Han Labs products.
@@ -10,19 +10,19 @@ Production-ready git-as-SSOT database engine for Faris Han Labs products.
 - One record per file: `.md` (YAML frontmatter + body), `.json`, `.yaml`.
 
 ## Validation
-- `git-dbms validate [collection]` validates all records.
+- `gidbams validate [collection]` validates all records.
 - `--from/--to` restricts to git-changed files (incremental).
 - Types: string, int, float, bool, array, object, date. Constraints: required, unique, min, max, pattern, enum.
 
 ## Derived store
-- `git-dbms build [db-path]` creates SQLite with one table per collection.
+- `gidbams build [db-path]` creates SQLite with one table per collection.
 - `.gitdb/data.db` is gitignored.
 
 ## MCP
-- `git-dbms mcp` runs stdio MCP server with tools: list_collections, list_records, get_record, validate, search_records.
+- `gidbams mcp` runs stdio MCP server with tools: list_collections, list_records, get_record, validate, search_records.
 
 ## Triggers
-- `.gitdb/triggers.yaml` defines shell triggers run via `git-dbms triggers run <event>`.
+- `.gitdb/triggers.yaml` defines shell triggers run via `gidbams triggers run <event>`.
 
 ## Licensing
 - Code MIT.

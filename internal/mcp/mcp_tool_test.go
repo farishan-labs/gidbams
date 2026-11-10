@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/farishan-labs/git-dbms/internal/store"
+	"github.com/farishan-labs/gidbams/internal/store"
 )
 
 func TestToolCallSearch(t *testing.T) {

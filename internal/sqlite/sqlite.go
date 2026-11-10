@@ -1,4 +1,4 @@
-// Package sqlite builds a derived SQLite database from git-dbms collections.
+// Package sqlite builds a derived SQLite database from gidbams collections.
 package sqlite
 
 import (
@@ -11,8 +11,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/farishan-labs/git-dbms/internal/config"
-	"github.com/farishan-labs/git-dbms/internal/store"
+	"github.com/farishan-labs/gidbams/internal/config"
+	"github.com/farishan-labs/gidbams/internal/store"
 )
 
 // Builder generates a SQLite db file at dbPath from repo collections.
@@ -58,7 +58,7 @@ func (b *Builder) Build(collections []struct {
 	if _, err := db.Exec(`CREATE TABLE _meta (key TEXT PRIMARY KEY, value TEXT)`); err != nil {
 		return err
 	}
-	_, _ = db.Exec(`INSERT INTO _meta (key,value) VALUES ('builder','git-dbms')`)
+	_, _ = db.Exec(`INSERT INTO _meta (key,value) VALUES ('builder','gidbams')`)
 
 	for _, c := range collections {
 		def := c.Def
