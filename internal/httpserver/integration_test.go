@@ -26,4 +26,3 @@ func TestHTTPEndpoints(t *testing.T) {
 		}
 	}
 }
-

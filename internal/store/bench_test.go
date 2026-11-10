@@ -29,4 +29,3 @@ func BenchmarkLoadAll(b *testing.B) {
 		_, _ = s.LoadAll()
 	}
 }
-

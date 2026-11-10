@@ -41,4 +41,3 @@ func TestConcurrentCreates(t *testing.T) {
 		t.Fatalf("expected 20 records, got %d", len(recs))
 	}
 }
-

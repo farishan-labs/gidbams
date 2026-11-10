@@ -30,4 +30,3 @@ func TestStatsUnauthorized(t *testing.T) {
 		t.Fatalf("status %d", rr.Code)
 	}
 }
-

@@ -12,4 +12,3 @@ func FuzzParseFrontmatter(f *testing.F) {
 		_, _, _ = parseFrontmatter(data)
 	})
 }
-

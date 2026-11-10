@@ -32,4 +32,3 @@ func TestMCPTools(t *testing.T) {
 		t.Fatalf("expected hello: %s", out.String())
 	}
 }
-

@@ -15,4 +15,3 @@ func TestDoctorCmdRuns(t *testing.T) {
 		t.Fatalf("doctor failed: %v", err)
 	}
 }
-

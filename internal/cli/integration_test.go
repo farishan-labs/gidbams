@@ -42,4 +42,3 @@ func TestCLIIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
