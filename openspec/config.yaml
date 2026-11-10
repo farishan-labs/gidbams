@@ -4,7 +4,7 @@ context: |
   Project: gidbams — git-as-a-source-of-truth database engine (Go).
   Tech stack: Go 1.26, cobra CLI, modernc.org/sqlite (pure Go, no CGO), MCP over stdio, HTTP server.
   Layout: cmd/gidbams (entry), internal/* (config, store, validate, sqlite, mcp, httpserver, cli, record, triggers, gitutil), pkg/gidbams (public embeddable API).
-  Runtime data names (unchanged for compat): gitdb.yaml, .gitdb/, env vars currently GIT_DBMS_* (being renamed to GIDBAMS_*).
+  Runtime data names (unchanged for compat): gitdb.yaml, .gitdb/, env vars now GIDBAMS_* (legacy GIT_DBMS_* accepted, deprecated).
   Module path: github.com/farishan-labs/gidbams. Binary: gidbams.
   Conventions: conventional commits, gofmt, go vet, race tests in CI, MIT license.
   Tests: go test ./..., fuzz on record parsing, integration tests in internal/cli and internal/httpserver and internal/mcp.

@@ -219,7 +219,7 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 	case "query":
 		sqlStr := strArg(args, "sql")
 		dbPath := filepath.Join(s.RepoRoot, ".gitdb", "data.db")
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		if _, err := os.Stat(dbPath); err != nil {
@@ -299,7 +299,7 @@ func (s *Server) callTool(name string, args map[string]any) (string, error) {
 			return "", err
 		}
 		dbPath := filepath.Join(s.RepoRoot, ".gitdb", "data.db")
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		b := sqlite.New(s.RepoRoot, dbPath)

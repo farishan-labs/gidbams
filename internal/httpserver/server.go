@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -142,7 +141,7 @@ func (s *Server) handleRecord(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("sql")
 	dbPath := filepath.Join(s.RepoRoot, ".gitdb", "data.db")
-	if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+	if v := config.EnvDB(); v != "" {
 		dbPath = v
 	}
 	out, err := sqlite.Query(dbPath, q)

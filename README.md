@@ -90,6 +90,13 @@ data/
   data.db  (gitignored)
 ```
 
+## Environment variables
+
+- `GIDBAMS_DB` — path to the derived SQLite database (overrides the default `.gitdb/data.db`).
+- `GIDBAMS_TOKEN` — bearer token for `gidbams serve`.
+
+The legacy names `GIT_DBMS_DB` and `GIT_DBMS_TOKEN` are still accepted as deprecated aliases for one release; `GIDBAMS_*` takes precedence when both are set.
+
 ## Status
 
 v0.1.0. See `openspec/specs/` for behavior contracts.

@@ -43,3 +43,51 @@ func TestLoadRootRejectsTraversal(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestEnvOrPrecedence(t *testing.T) {
+	t.Setenv(EnvDBNew, "new-val")
+	t.Setenv(EnvDBLegacy, "legacy-val")
+	if got := EnvOr(EnvDBNew, EnvDBLegacy); got != "new-val" {
+		t.Fatalf("precedence: got %q want new-val", got)
+	}
+}
+
+func TestEnvOrFallback(t *testing.T) {
+	t.Setenv(EnvDBNew, "")
+	t.Setenv(EnvDBLegacy, "legacy-val")
+	if got := EnvOr(EnvDBNew, EnvDBLegacy); got != "legacy-val" {
+		t.Fatalf("fallback: got %q want legacy-val", got)
+	}
+}
+
+func TestEnvOrEmpty(t *testing.T) {
+	t.Setenv(EnvDBNew, "")
+	t.Setenv(EnvDBLegacy, "")
+	if got := EnvOr(EnvDBNew, EnvDBLegacy); got != "" {
+		t.Fatalf("empty: got %q want empty", got)
+	}
+}
+
+func TestEnvDB(t *testing.T) {
+	t.Setenv(EnvDBNew, "newdb")
+	t.Setenv(EnvDBLegacy, "legacydb")
+	if got := EnvDB(); got != "newdb" {
+		t.Fatalf("EnvDB precedence: got %q", got)
+	}
+	t.Setenv(EnvDBNew, "")
+	if got := EnvDB(); got != "legacydb" {
+		t.Fatalf("EnvDB fallback: got %q", got)
+	}
+}
+
+func TestEnvToken(t *testing.T) {
+	t.Setenv(EnvTokenNew, "newtok")
+	t.Setenv(EnvTokenLegacy, "legacytok")
+	if got := EnvToken(); got != "newtok" {
+		t.Fatalf("EnvToken precedence: got %q", got)
+	}
+	t.Setenv(EnvTokenNew, "")
+	if got := EnvToken(); got != "legacytok" {
+		t.Fatalf("EnvToken fallback: got %q", got)
+	}
+}

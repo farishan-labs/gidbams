@@ -109,7 +109,7 @@ func init() {
 	rootCmd.AddCommand(migrateCmd)
 	watchCmd.Flags().IntVar(&watchInterval, "interval", 2, "poll interval seconds")
 	serveCmd.Flags().IntVar(&servePort, "port", 8080, "port to listen on")
-	serveCmd.Flags().StringVar(&serveToken, "token", os.Getenv("GIT_DBMS_TOKEN"), "bearer token")
+	serveCmd.Flags().StringVar(&serveToken, "token", config.EnvToken(), "bearer token (env: GIDBAMS_TOKEN)")
 	serveCmd.Flags().StringVar(&serveCert, "tls-cert", "", "TLS certificate file")
 	serveCmd.Flags().StringVar(&serveKey, "tls-key", "", "TLS key file")
 	serveCmd.Flags().StringVar(&serveCORS, "cors", "", "CORS allowed origin")
@@ -434,8 +434,8 @@ var buildCmd = &cobra.Command{
 		if len(args) > 0 {
 			dbPath = args[0]
 		}
-		// env override
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		// env override: GIDBAMS_DB
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		if err := buildDerivedDB(repoRoot, dbPath); err != nil {
@@ -534,7 +534,7 @@ var queryCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		if _, err := os.Stat(dbPath); err != nil {
@@ -643,7 +643,7 @@ var rebuildCmd = &cobra.Command{
 			return err
 		}
 		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		return buildDerivedDB(repoRoot, dbPath)
@@ -998,7 +998,7 @@ var cleanCmd = &cobra.Command{
 	Short: "Remove derived database and build artifacts",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbPath := filepath.Join(repoRoot, ".gitdb", "data.db")
-		if v := os.Getenv("GIT_DBMS_DB"); v != "" {
+		if v := config.EnvDB(); v != "" {
 			dbPath = v
 		}
 		if err := os.Remove(dbPath); err != nil && !os.IsNotExist(err) {

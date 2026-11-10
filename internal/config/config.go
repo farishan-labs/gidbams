@@ -169,6 +169,41 @@ func SaveRoot(repoRoot string, c *RootConfig) error {
 	return os.WriteFile(filepath.Join(repoRoot, DefaultConfigFile), b, 0o644)
 }
 
+// Env var names for the derived SQLite database path.
+const (
+	EnvDBNew    = "GIDBAMS_DB"
+	EnvDBLegacy = "GIT_DBMS_DB"
+)
+
+// Env var names for the HTTP bearer token.
+const (
+	EnvTokenNew    = "GIDBAMS_TOKEN"
+	EnvTokenLegacy = "GIT_DBMS_TOKEN"
+)
+
+// EnvOr returns the value of the preferred (new) environment variable when it is
+// non-empty, falling back to the legacy variable otherwise. Centralizes the
+// precedence rule (new name wins) so future removal of legacy support is a
+// one-line change.
+func EnvOr(newName, legacyName string) string {
+	if v := os.Getenv(newName); v != "" {
+		return v
+	}
+	return os.Getenv(legacyName)
+}
+
+// EnvDB resolves the derived SQLite database path from the environment,
+// preferring GIDBAMS_DB over the deprecated GIT_DBMS_DB.
+func EnvDB() string {
+	return EnvOr(EnvDBNew, EnvDBLegacy)
+}
+
+// EnvToken resolves the HTTP bearer token from the environment, preferring
+// GIDBAMS_TOKEN over the deprecated GIT_DBMS_TOKEN.
+func EnvToken() string {
+	return EnvOr(EnvTokenNew, EnvTokenLegacy)
+}
+
 func validateRef(ref CollectionRef) error {
 	if ref.Name == "" {
 		return fmt.Errorf("collection name required")
