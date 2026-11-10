@@ -43,6 +43,33 @@ See `research/topics/gidbams/` and `research/topics/git-as-ssot-db/` for the ful
 - Doctor health check
 - Go library (`pkg/gidbams`) for embedding
 
+## Install
+
+Download a prebuilt binary from the [GitHub Releases](https://github.com/farishan-labs/gidbams/releases) page:
+
+- Linux: `gidbams-linux`
+- macOS: `gidbams-macos`
+
+```sh
+# Linux (amd64)
+curl -L -o gidbams https://github.com/farishan-labs/gidbams/releases/latest/download/gidbams-linux
+chmod +x gidbams
+sudo mv gidbams /usr/local/bin/
+
+# macOS
+curl -L -o gidbams https://github.com/farishan-labs/gidbams/releases/latest/download/gidbams-macos
+chmod +x gidbams
+sudo mv gidbams /usr/local/bin/
+```
+
+Verify the download against `SHA256SUMS`:
+
+```sh
+sha256sum -c SHA256SUMS
+```
+
+> Note: the macOS binary is not code-signed. On first run you may need to approve it in System Settings → Privacy & Security.
+
 ## Quick start
 
 ```sh
