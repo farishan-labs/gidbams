@@ -1,9 +1,9 @@
 ## 1. Fix release workflow
 
-- [ ] 1.1 Add `permissions: contents: write` to the release job in `.github/workflows/release.yml`
-- [ ] 1.2 Add `workflow_dispatch` trigger alongside the existing `push: tags` trigger
-- [ ] 1.3 Verify build commands match the renamed project: `go test ./...`, `go build -o gidbams ./cmd/gidbams` (Go 1.26)
-- [ ] 1.4 Add a SHA256SUMS generation step in the ubuntu job and upload it via softprops
+- [x] 1.1 Add `permissions: contents: write` to the release job in `.github/workflows/release.yml`
+- [x] 1.2 Add `workflow_dispatch` trigger alongside the existing `push: tags` trigger
+- [x] 1.3 Verify build commands match the renamed project: `go test ./...`, `go build -o gidbams ./cmd/gidbams` (Go 1.26)
+- [x] 1.4 Add a SHA256SUMS generation step in the ubuntu job and upload it via softprops
 
 ## 2. Validate end-to-end
 
