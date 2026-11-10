@@ -18,14 +18,14 @@ Many product datasets need a store that is:
 
 | Tool | Paradigm | Why not (or when to use) |
 |---|---|---|
-| **inGitDB** | Git-files-first DB with typed schemas, CLI CRUD, triggers/subscribers spec | Closest analogue. Borrow its collection layout, incremental validation, and trigger patterns; it has no shipped MCP server and low maturity, and uses YAML/JSON rather than Markdown frontmatter. |
-| **Dolt / Doltgres / DoltLite** | Version-controlled SQL database (DB is SSOT, Git-like history on tables) | Different paradigm (DB-first). Pick it when you need real merge semantics, concurrent writes, or a live SQL server; heavier than text records need. |
-| **TerminusDB** | Graph database with git-like version control (branches/merges/time-travel) | Graph/versioned-DB paradigm; overkill for flat record collections. |
-| **Astro content collections** | Build-time content layer (Zod schemas over md/mdx/json/yaml in git) | Best fit for the public site layer; complements `gidbams` (the site reads derived data). |
-| **Keystatic / Decap / TinaCMS** | Git-based CMS with admin UI over files in git | Optional contributor-UI layer on top of a git SSOT; not a replacement. |
-| **gitrows / gh-as-db / @naturalcycles/github-db** | Single or sharded JSON file per collection in GitHub | Reference patterns (SHA optimistic locking, sharding, transactions); tiny adoption — treat as reference only. |
-| **Generic Git MCP servers** (modelcontextprotocol git, cyanheads/git-mcp) | Expose raw git operations as MCP tools | Generic git ops, no record/schema/DB semantics. `gidbams` adds collections, validation, derived SQLite, and SQL. |
-| **DVC / LakeFS / Nessie** | Data versioning for data lakes / ML pipelines | Different audience (ML/data lakes), not record-level databases. |
+| **[inGitDB](https://ingitdb.com/)** ([repo](https://github.com/ingitdb/ingitdb)) | Git-files-first DB with typed schemas, CLI CRUD, triggers/subscribers spec | Closest analogue. Borrow its collection layout, incremental validation, and trigger patterns; it has no shipped MCP server and low maturity, and uses YAML/JSON rather than Markdown frontmatter. |
+| **[Dolt](https://www.dolthub.com/) / [Doltgres](https://www.dolthub.com/blog/2026-08-06-doltgres-1-0) / [DoltLite](https://www.dolthub.com/blog/2026-04-27-why-doltlite/)** | Version-controlled SQL database (DB is SSOT, Git-like history on tables) | Different paradigm (DB-first). Pick it when you need real merge semantics, concurrent writes, or a live SQL server; heavier than text records need. |
+| **[TerminusDB](https://terminusdb.com/)** ([repo](https://github.com/terminusdb/terminusdb)) | Graph database with git-like version control (branches/merges/time-travel) | Graph/versioned-DB paradigm; overkill for flat record collections. |
+| **[Astro content collections](https://docs.astro.build/en/guides/content-collections/)** | Build-time content layer (Zod schemas over md/mdx/json/yaml in git) | Best fit for the public site layer; complements `gidbams` (the site reads derived data). |
+| **[Keystatic](https://keystatic.com/) / [Decap CMS](https://decapcms.org/) / [TinaCMS](https://tina.io/)** | Git-based CMS with admin UI over files in git | Optional contributor-UI layer on top of a git SSOT; not a replacement. |
+| **[gitrows](https://github.com/gitrows/gitrows) / [gh-as-db](https://github.com/Almyk/gh-as-db) / [@naturalcycles/github-db](https://github.com/kirillgroshkov/github-db)** | Single or sharded JSON file per collection in GitHub | Reference patterns (SHA optimistic locking, sharding, transactions); tiny adoption — treat as reference only. |
+| **Generic Git MCP servers** ([modelcontextprotocol git](https://github.com/modelcontextprotocol/servers/tree/main/src/git), [cyanheads/git-mcp-server](https://github.com/cyanheads/git-mcp-server)) | Expose raw git operations as MCP tools | Generic git ops, no record/schema/DB semantics. `gidbams` adds collections, validation, derived SQLite, and SQL. |
+| **[DVC](https://dvc.org/) / [LakeFS](https://lakefs.io/) / [Nessie](https://projectnessie.org/)** | Data versioning for data lakes / ML pipelines | Different audience (ML/data lakes), not record-level databases. |
 
 See `research/topics/gidbams/` and `research/topics/git-as-ssot-db/` for the full comparison and evidence.
 
