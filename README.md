@@ -1,5 +1,8 @@
 # gidbams
 
+![License](https://img.shields.io/github/license/farishan-labs/gidbams) ![Stars](https://img.shields.io/github/stars/farishan-labs/gidbams)
+
+
 Production-ready **git-as-a-source-of-truth database engine**. Treats a Git repository as the authoritative store: records are plain text files (Markdown with YAML frontmatter, JSON, or YAML), reviewed via PRs, versioned by commits, queried via a derived SQLite cache and an MCP server.
 
 Built for Faris Han Labs products (providers, forager, provider-intel, etc.) where **git is the SSOT** and local AI agents need fast, queryable access.
@@ -132,3 +135,9 @@ v0.1.0. See `openspec/specs/` for behavior contracts.
 
 MIT
 EOF
+
+## Installation
+
+```bash
+go get github.com/farishan-labs/gidbams
+```

@@ -3,3 +3,6 @@
 bin/
 dist/
 EOF
+# secrets
+.env
+.env.*
